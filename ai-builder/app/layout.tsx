@@ -60,14 +60,16 @@ export default function RootLayout({
                 } catch(e) {}
 
                 // Auto-cleanup service workers and caches on every page load
-                if ('serviceWorker' in navigator) {
-                  navigator.serviceWorker.getRegistrations().then(function(registrations) {
-                    for (let registration of registrations) {
-                      console.log('🔧 Unregistering service worker:', registration.scope);
-                      registration.unregister();
-                    }
-                  });
-                }
+                // Wrap in try/catch — navigator.serviceWorker throws SecurityError in sandboxed iframes
+                try {
+                  if ('serviceWorker' in navigator) {
+                    navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                      for (let registration of registrations) {
+                        registration.unregister();
+                      }
+                    });
+                  }
+                } catch(e) {}
                 if ('caches' in window) {
                   caches.keys().then(function(names) {
                     for (let name of names) {
