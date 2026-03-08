@@ -70,14 +70,15 @@ export default function RootLayout({
                     });
                   }
                 } catch(e) {}
-                if ('caches' in window) {
-                  caches.keys().then(function(names) {
-                    for (let name of names) {
-                      console.log('🗑️ Deleting cache:', name);
-                      caches.delete(name);
-                    }
-                  });
-                }
+                try {
+                  if ('caches' in window) {
+                    caches.keys().then(function(names) {
+                      for (let name of names) {
+                        caches.delete(name);
+                      }
+                    });
+                  }
+                } catch(e) {}
               })();
             `,
           }}
