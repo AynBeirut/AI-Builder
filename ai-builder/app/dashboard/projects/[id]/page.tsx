@@ -933,7 +933,11 @@ Output ONLY the complete HTML code, nothing else.`)
 
       const noExt = noQuery.replace(/\.html?$/i, '')
       const base = (noExt.split('/').filter(Boolean).pop() || noExt).split('\\').pop() || noExt
-      const stem = base.toLowerCase().replace(/[^a-z0-9]/g, '')
+      const stem = base
+        .toLowerCase()
+        .replace(/[^a-z0-9-_]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '')
       return stem === 'index' ? 'home' : stem
     }
 
@@ -954,9 +958,9 @@ Output ONLY the complete HTML code, nothing else.`)
         var out = '';
         for (var i = 0; i < src.length; i++) {
           var ch = src.charCodeAt(i);
-          if ((ch >= 48 && ch <= 57) || (ch >= 97 && ch <= 122)) out += src[i];
+          if ((ch >= 48 && ch <= 57) || (ch >= 97 && ch <= 122) || ch === 45 || ch === 95) out += src[i];
         }
-        return out;
+        return out.replace(/-+/g, '-').replace(/^[-_]+|[-_]+$/g, '');
       }
       function isBlockedPath(pathname){
         var p = String(pathname || '').toLowerCase();
