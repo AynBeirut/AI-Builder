@@ -1005,9 +1005,39 @@ Output ONLY the complete HTML code, nothing else.`)
         var sections = document.querySelectorAll('[id^="page-"], [class~="page-section"], [data-page-id]');
         sections.forEach(function(el){ el.style.display = 'none'; if (el.classList) el.classList.remove('active'); });
         var ids = ['page-' + stem, stem + '-page', stem + '-section', 'section-' + stem, stem];
+        var target = null;
         for (var j = 0; j < ids.length; j++) {
-          var target = document.getElementById(ids[j]);
-          if (target) { target.style.display = 'block'; if (target.classList) target.classList.add('active'); window.scrollTo(0,0); break; }
+          target = document.getElementById(ids[j]);
+          if (target) break;
+        }
+        if (!target) {
+          var candidates = document.querySelectorAll('[data-page-id], [data-page], [data-section], section[id], main > section, [class*="page"]');
+          for (var k = 0; k < candidates.length; k++) {
+            var el = candidates[k];
+            var values = [
+              el.getAttribute && el.getAttribute('data-page-id'),
+              el.getAttribute && el.getAttribute('data-page'),
+              el.getAttribute && el.getAttribute('data-section'),
+              el.getAttribute && el.getAttribute('id')
+            ];
+            var matched = false;
+            for (var v = 0; v < values.length; v++) {
+              var n = norm(values[v] || '');
+              if (n === stem || n === ('page' + stem) || n === (stem + 'page') || n === (stem + 'section')) {
+                matched = true;
+                break;
+              }
+            }
+            if (matched) {
+              target = el;
+              break;
+            }
+          }
+        }
+        if (target) {
+          target.style.display = 'block';
+          if (target.classList) target.classList.add('active');
+          window.scrollTo(0,0);
         }
       }
       function rewriteAnchors(root){
