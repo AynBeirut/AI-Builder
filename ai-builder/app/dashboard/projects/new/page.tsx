@@ -1,39 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
-const TEMPLATES = [
-  {
-    id: "blank",
-    name: "Blank Project",
-    description: "Start from scratch with empty files",
-    icon: "📄",
-  },
-  {
-    id: "landing",
-    name: "Landing Page",
-    description: "Modern landing page with hero and features",
-    icon: "🚀",
-  },
-  {
-    id: "web",
-    name: "Web",
-    description: "Modern landing page with hero and features",
-    icon: "🌐",
-  },
-  {
-    id: "ecommerce",
-    name: "Ecommerce",
-    description: "Personal portfolio with projects showcase",
-    icon: "🛒",
-  },
-]
+import { DesignStylePicker } from "@/components/ui/design-style-picker"
+import { OptionSelector } from "@/components/ui/option-selector"
+import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { CONTENT_TONES } from "@/components/ui/content-preferences"
+import { CategorySelector } from "@/components/ui/wizard/category-selector"
+import { TemplateGrid } from "@/components/ui/wizard/template-grid"
+import { StageBuilder } from "@/components/ui/wizard/stage-builder"
+import { StageAssets } from "@/components/ui/wizard/stage-assets"
+import { NavStyleSelector } from "@/components/ui/wizard/nav-style-selector"
+import { BASE_ASSET_ZONES, WEBSITE_TEMPLATES, buildTemplateLayout } from "@/lib/wizard-config"
+import { FONT_OPTIONS, getFontLabel, getFontCssFamily, FONT_PREVIEW_STYLESHEET_URL } from "@/lib/font-options"
 
 export default function NewProjectPage() {
   const router = useRouter()
@@ -41,7 +26,28 @@ export default function NewProjectPage() {
   const [currentStep, setCurrentStep] = useState(1)
   const [selectedCategory, setSelectedCategory] = useState<string>("")
   const [selectedTemplate, setSelectedTemplate] = useState<string>("")
+  const [layoutSyncedTemplate, setLayoutSyncedTemplate] = useState<string>("")
   const [useAI, setUseAI] = useState(false)
+  
+  // New option selection states
+  const [selectedDesignStyle, setSelectedDesignStyle] = useState<string>("business")
+  const [selectedSections, setSelectedSections] = useState<string[]>(["hero", "about", "services", "contact"])
+  const [selectedTone, setSelectedTone] = useState<string>("professional")
+  const [selectedFeatures, setSelectedFeatures] = useState<string[]>([])
+  const [selectedFont, setSelectedFont] = useState<string>("ai-auto")
+
+  // New wizard state
+  const [selectedNavType, setSelectedNavType] = useState<string>("top-nav")
+  const [pageCarousel, setPageCarousel] = useState<Record<string,number>>({})
+  const [pageGallery, setPageGallery] = useState<Record<string,number>>({})
+  const [pageNamesArray, setPageNamesArray] = useState<string[]>(["Home"])
+  const [sectionPageMap] = useState<Record<string, string[]>>({})
+  const [pageLayouts, setPageLayouts] = useState<Record<string, string[]>>({})
+  const [pageSectionSizes, setPageSectionSizes] = useState<Record<string, string[]>>({})
+  const [uploadPickerZone, setUploadPickerZone] = useState<{page: string; zone: string} | null>(null)
+  const [serviceInput, setServiceInput] = useState("")
+  const [pageNamingError, setPageNamingError] = useState("")
+
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -52,70 +58,60 @@ export default function NewProjectPage() {
     mission: "",
     vision: "",
     aboutUs: "",
+    servicesDescription: "",
+    servicesList: [] as string[],
     phone: "",
     email: "",
     location: "",
     primaryColor: "#0056b3",
+    brandColors: ["#0056b3"] as string[],
     facebook: "",
     twitter: "",
     linkedin: "",
     instagram: "",
-    numberOfPages: "1",
-    pageNames: "",
+    pageImages: {} as Record<string, Record<string, string>>,
+    pageImageFileNames: {} as Record<string, Record<string, string>>,
+    // Option selections
+    designStyle: "business",
+    contentSections: ["hero", "about", "services", "contact"] as string[],
+    contentTone: "professional",
+    specialFeatures: [] as string[],
+    fontFamily: "ai-auto",
+    navigationStyle: "top-nav",
+    heroLayout: "fullscreen",
+    contentStructure: "single-page",
+    footerStyle: "comprehensive",
+    mobileLayout: "mobile-first"
   })
 
-  // Template data matching the templates page
-  const templates = {
-    ecommerce: [
-      { id: "online-store", name: "Online Store", icon: "🏪", description: "Full-featured online store with product catalog, shopping cart, and checkout" },
-      { id: "fashion-store", name: "Fashion Store", icon: "👗", description: "Elegant fashion e-commerce with lookbook gallery and size guides" },
-      { id: "electronics-shop", name: "Electronics Shop", icon: "📱", description: "Tech store with product comparisons, specifications, and reviews" },
-      { id: "marketplace", name: "Marketplace", icon: "🌐", description: "Multi-vendor marketplace with seller profiles and commission system" },
-      { id: "digital-products", name: "Digital Products", icon: "💾", description: "Sell digital downloads, courses, and software with instant delivery" },
-      { id: "subscription-box", name: "Subscription Box", icon: "📦", description: "Recurring subscription service with membership tiers and plans" },
-      { id: "grocery-store", name: "Grocery Store", icon: "🛒", description: "Online grocery with categories, fresh produce, and home delivery" },
-      { id: "jewelry-shop", name: "Jewelry Shop", icon: "💍", description: "Luxury jewelry store with high-res galleries and custom orders" },
-      { id: "bookstore", name: "Bookstore", icon: "📚", description: "Online bookstore with author pages, reviews, and recommendations" },
-      { id: "furniture-store", name: "Furniture Store", icon: "🛋️", description: "Furniture e-commerce with 3D previews and room planners" },
-      { id: "pet-store", name: "Pet Store", icon: "🐾", description: "Pet supplies shop with product categories and care guides" },
-      { id: "toy-store", name: "Toy Store", icon: "🧸", description: "Children's toy shop with age categories and gift guides" },
-    ],
-    business: [
-      { id: "restaurant", name: "Restaurant", icon: "🍽️", description: "Restaurant website with menu, online ordering, and reservations" },
-      { id: "salon-spa", name: "Salon & Spa", icon: "💇", description: "Beauty salon with service booking, staff profiles, and gallery" },
-      { id: "real-estate", name: "Real Estate", icon: "🏡", description: "Property listings with search filters, virtual tours, and agent contact" },
-      { id: "gym-fitness", name: "Gym & Fitness", icon: "💪", description: "Fitness center with class schedules, membership plans, and trainers" },
-      { id: "medical-clinic", name: "Medical Clinic", icon: "🏥", description: "Healthcare website with appointment booking and doctor profiles" },
-      { id: "law-firm", name: "Law Firm", icon: "⚖️", description: "Professional law firm with practice areas, case studies, and consultation" },
-      { id: "construction", name: "Construction Company", icon: "🏗️", description: "Construction and contracting with project portfolios, services, and quotes" },
-      { id: "dental-clinic", name: "Dental Clinic", icon: "🦷", description: "Dental practice with services, team bios, and online booking" },
-      { id: "auto-repair", name: "Auto Repair", icon: "🔧", description: "Auto service shop with maintenance schedules and repair quotes" },
-      { id: "photography", name: "Photography Studio", icon: "📸", description: "Photographer portfolio with booking calendar and pricing packages" },
-      { id: "accounting", name: "Accounting Firm", icon: "💼", description: "Professional accounting services with client portal and resources" },
-      { id: "hotel", name: "Hotel & Resort", icon: "🏨", description: "Hotel booking with room listings, amenities, and reservations" },
-      { id: "consulting", name: "Business Consulting", icon: "📊", description: "Consulting firm with expertise areas, case studies, and contact" },
-      { id: "cleaning-service", name: "Cleaning Service", icon: "🧹", description: "Professional cleaning with service packages and online booking" },
-      { id: "catering", name: "Catering Service", icon: "🍱", description: "Event catering with menu options, packages, and inquiry forms" },
-      { id: "moving-company", name: "Moving Company", icon: "🚚", description: "Moving services with quotes calculator and service areas" },
-    ],
-    general: [
-      { id: "landing-page", name: "Landing Page", icon: "📄", description: "Clean landing page with hero, features, and call-to-action" },
-      { id: "portfolio", name: "Portfolio", icon: "🎨", description: "Creative portfolio with project gallery and about section" },
-      { id: "blog", name: "Blog", icon: "📝", description: "Personal or company blog with articles, categories, and comments" },
-      { id: "agency", name: "Digital Agency", icon: "🎯", description: "Creative agency with services, team, and portfolio" },
-      { id: "saas", name: "SaaS Landing", icon: "☁️", description: "Software product landing page with pricing and features" },
-      { id: "event", name: "Event", icon: "🎉", description: "Event website with schedule, speakers, and ticket registration" },
-      { id: "nonprofit", name: "Non-Profit", icon: "❤️", description: "Charity organization with donation forms and impact stories" },
-      { id: "education", name: "Online Learning", icon: "🎓", description: "Educational platform with courses, instructors, and enrollment" },
-      { id: "podcast", name: "Podcast", icon: "🎙️", description: "Podcast website with episodes, player, and subscription options" },
-      { id: "resume", name: "Resume/CV", icon: "📋", description: "Professional resume with experience, skills, and contact info" },
-      { id: "wedding", name: "Wedding", icon: "💒", description: "Wedding website with RSVP, registry, and event details" },
-      { id: "news", name: "News Portal", icon: "📰", description: "News website with articles, categories, and breaking news" },
-      { id: "magazine", name: "Online Magazine", icon: "📖", description: "Digital magazine with featured articles and subscriptions" },
-      { id: "community", name: "Community Forum", icon: "👥", description: "Community platform with discussions, members, and events" },
-      { id: "directory", name: "Business Directory", icon: "📍", description: "Local business directory with listings and reviews" },
-      { id: "coming-soon", name: "Coming Soon", icon: "⏰", description: "Launch page with countdown timer and email signup" },
-    ],
+  useEffect(() => {
+    const id = "font-preview-stylesheet"
+    if (document.getElementById(id)) return
+    const link = document.createElement("link")
+    link.id = id
+    link.rel = "stylesheet"
+    link.href = FONT_PREVIEW_STYLESHEET_URL
+    document.head.appendChild(link)
+  }, [])
+
+  const templates = WEBSITE_TEMPLATES
+
+  const resizeImage = (dataUrl: string, maxW = 600): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new window.Image()
+      img.onload = () => {
+        const scale = Math.min(1, maxW / img.width)
+        const canvas = document.createElement('canvas')
+        canvas.width = Math.round(img.width * scale)
+        canvas.height = Math.round(img.height * scale)
+        const ctx = canvas.getContext('2d')
+        if (!ctx) { resolve(dataUrl); return }
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+        resolve(canvas.toDataURL('image/jpeg', 0.65))
+      }
+      img.onerror = () => resolve(dataUrl)
+      img.src = dataUrl
+    })
   }
 
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -129,30 +125,8 @@ export default function NewProjectPage() {
     }
   }
 
-  const handleImagesUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    const readers = files.map(file => {
-      return new Promise<string>((resolve) => {
-        const reader = new FileReader()
-        reader.onloadend = () => resolve(reader.result as string)
-        reader.readAsDataURL(file)
-      })
-    })
-    
-    Promise.all(readers).then(results => {
-      setFormData({ ...formData, images: [...formData.images, ...results] })
-    })
-  }
-
-  const removeImage = (index: number) => {
-    setFormData({
-      ...formData,
-      images: formData.images.filter((_, i) => i !== index)
-    })
-  }
-
   const handleNext = () => {
-    if (currentStep < 3) {
+    if (currentStep < 7) {
       setCurrentStep(currentStep + 1)
     }
   }
@@ -165,13 +139,46 @@ export default function NewProjectPage() {
 
   const handleCategorySelect = (category: string) => {
     setSelectedCategory(category)
-    setCurrentStep(3)
   }
 
   const handleTemplateSelect = (templateId: string) => {
+    const selectedTemplateDef = Object.values(templates).flat().find((template) => template.id === templateId)
+    const generatedLayout = buildTemplateLayout(selectedTemplateDef?.sections || [])
+
     setSelectedTemplate(templateId)
+    setSelectedSections((previous) => (generatedLayout.contentSections.length > 0 ? generatedLayout.contentSections : previous))
+    setPageLayouts((previous) => ({ ...previous, Home: generatedLayout.pageLayouts }))
+    setPageSectionSizes((previous) => ({ ...previous, Home: generatedLayout.pageSectionSizes }))
+    setPageCarousel((previous) => ({ ...previous, Home: generatedLayout.carouselCount }))
+    setPageGallery((previous) => ({ ...previous, Home: generatedLayout.galleryCount }))
+    setLayoutSyncedTemplate(templateId)
     setFormData({ ...formData, template: templateId })
   }
+
+  useEffect(() => {
+    if (currentStep !== 5) return
+    if (!selectedTemplate) return
+
+    const selectedTemplateDef = Object.values(templates).flat().find((template) => template.id === selectedTemplate)
+    if (!selectedTemplateDef) return
+
+    const generatedLayout = buildTemplateLayout(selectedTemplateDef.sections || [])
+    const currentHomeLayout = pageLayouts.Home || []
+    const expectedHasGroupedRows = generatedLayout.pageLayouts.some((token) => token.startsWith("row:"))
+    const currentHasGroupedRows = currentHomeLayout.some((token) => token.startsWith("row:"))
+    const shouldForceLegacyResync = expectedHasGroupedRows && !currentHasGroupedRows
+
+    if (layoutSyncedTemplate === selectedTemplate && !shouldForceLegacyResync) return
+
+    setPageLayouts((previous) => ({ ...previous, Home: generatedLayout.pageLayouts }))
+    setPageSectionSizes((previous) => ({ ...previous, Home: generatedLayout.pageSectionSizes }))
+    setPageCarousel((previous) => ({ ...previous, Home: generatedLayout.carouselCount }))
+    setPageGallery((previous) => ({ ...previous, Home: generatedLayout.galleryCount }))
+    if (generatedLayout.contentSections.length > 0) {
+      setSelectedSections(generatedLayout.contentSections)
+    }
+    setLayoutSyncedTemplate(selectedTemplate)
+  }, [currentStep, selectedTemplate, layoutSyncedTemplate, templates, pageLayouts.Home])
 
   const handleAIRecommendation = () => {
     // AI Logic: Analyze business type and info to recommend template
@@ -344,19 +351,78 @@ export default function NewProjectPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    const validatePageNames = (): string | null => {
+      const userPages = pageNamesArray
+        .map((name, index) => ({ index, value: name.trim() }))
+        .filter((entry) => entry.index > 0)
+
+      if (userPages.some((entry) => !entry.value)) {
+        return "Please name all pages before continuing."
+      }
+
+      const seen = new Set<string>()
+      for (const entry of userPages) {
+        const key = entry.value.toLowerCase()
+        if (seen.has(key)) {
+          return "Page names must be unique. Please rename duplicates."
+        }
+        seen.add(key)
+      }
+
+      return null
+    }
+
+    const pageError = validatePageNames()
+    if (pageError) {
+      setCurrentStep(4)
+      setPageNamingError(pageError)
+      return
+    }
+
+    const normalizedPageNames = pageNamesArray.map((name, index) => (index === 0 ? "Home" : name.trim()))
     setLoading(true)
 
     try {
+      const selectedTemplateDef = Object.values(templates).flat().find(t => t.id === selectedTemplate)
+
+      // Build carousel/gallery image lists from pageImages
+      const projectData = {
+        ...formData,
+        designStyle: selectedDesignStyle,
+        contentSections: selectedSections,
+        contentTone: selectedTone,
+        specialFeatures: selectedFeatures,
+        fontFamily: selectedFont,
+        navigationStyle: selectedNavType,
+        heroLayout: formData.heroLayout || "fullscreen",
+        contentStructure: formData.contentStructure || "single-page",
+        footerStyle: formData.footerStyle || "comprehensive",
+        mobileLayout: formData.mobileLayout || "mobile-first",
+        navType: selectedNavType,
+        pageCarousel,
+        pageGallery,
+        template: selectedTemplate,
+        category: selectedCategory,
+        numberOfPages: String(normalizedPageNames.length),
+        pageNames: normalizedPageNames.join(','),
+        sectionPageMap,
+        pageLayouts,
+        pageSectionSizes,
+        pageImages: formData.pageImages,
+        brandColors: formData.brandColors,
+        templateSections: selectedTemplateDef?.sections || [],
+      }
+
       const res = await fetch("/api/projects", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(projectData),
       })
 
       if (!res.ok) throw new Error("Failed to create project")
 
       const project = await res.json()
-      router.push(`/dashboard/projects/${project.id}`)
+      router.push(`/dashboard/projects/${project.id}?mode=planner&from=wizard`)
     } catch (error) {
       console.error("Error creating project:", error)
       alert("Failed to create project. Please try again.")
@@ -365,37 +431,254 @@ export default function NewProjectPage() {
     }
   }
 
+  // ── Step 7 helpers (outside render to avoid IIFE issues) ─────────────────
+  const s7BaseZones = BASE_ASSET_ZONES
+  const updatePageCount = (count: number) => {
+    setPageNamingError("")
+    setPageNamesArray(prev => {
+      return Array(count).fill('').map((_, i) => {
+        if (i === 0) return 'Home'
+        const existing = prev[i]
+        return (existing && existing.length > 0) ? existing : `Page ${i + 1}`
+      })
+    })
+  }
+
+  const updatePageName = (pi: number, newName: string) => {
+    setPageNamingError("")
+    setPageNamesArray(prev => {
+      const next = [...prev]
+      if (pi === 0) {
+        next[pi] = 'Home'
+        return next
+      }
+
+      const oldName = next[pi]
+      const rawName = newName ?? ''
+      const safeName = rawName.trim()
+      next[pi] = rawName
+
+      if (!oldName || !safeName || oldName === safeName) {
+        return next
+      }
+
+      // Keep Step 6 structure/settings mapped to the renamed page
+      setPageCarousel(prevCarousel => {
+        if (prevCarousel[oldName] === undefined) return prevCarousel
+        const nextCarousel = { ...prevCarousel, [safeName]: prevCarousel[oldName] }
+        delete nextCarousel[oldName]
+        return nextCarousel
+      })
+
+      setPageGallery(prevGallery => {
+        if (prevGallery[oldName] === undefined) return prevGallery
+        const nextGallery = { ...prevGallery, [safeName]: prevGallery[oldName] }
+        delete nextGallery[oldName]
+        return nextGallery
+      })
+
+      setPageLayouts(prevLayouts => {
+        if (!prevLayouts[oldName]) return prevLayouts
+        const nextLayouts = { ...prevLayouts, [safeName]: prevLayouts[oldName] }
+        delete nextLayouts[oldName]
+        return nextLayouts
+      })
+
+      setPageSectionSizes(prevSizes => {
+        if (!prevSizes[oldName]) return prevSizes
+        const nextSizes = { ...prevSizes, [safeName]: prevSizes[oldName] }
+        delete nextSizes[oldName]
+        return nextSizes
+      })
+
+      setFormData(fd => {
+        const imgs = { ...fd.pageImages }
+        const fns  = { ...fd.pageImageFileNames }
+        if (imgs[oldName]) { imgs[safeName] = imgs[oldName]; delete imgs[oldName] }
+        if (fns[oldName])  { fns[safeName]  = fns[oldName];  delete fns[oldName]  }
+        return { ...fd, pageImages: imgs, pageImageFileNames: fns }
+      })
+      return next
+    })
+  }
+
+  const removePage = (pageIndex: number) => {
+    setPageNamingError("")
+    if (pageIndex === 0) return
+
+    setPageNamesArray((previous) => {
+      if (pageIndex < 0 || pageIndex >= previous.length || previous.length <= 1) return previous
+
+      const removedRaw = previous[pageIndex] ?? ""
+      const removedKey = removedRaw.trim()
+      const next = previous.filter((_, index) => index !== pageIndex)
+
+      const cleanupMap = <T extends Record<string, unknown>>(source: T): T => {
+        const nextMap = { ...source }
+        delete nextMap[removedRaw]
+        if (removedKey) delete nextMap[removedKey]
+        return nextMap
+      }
+
+      setPageCarousel((previousCarousel) => cleanupMap(previousCarousel))
+      setPageGallery((previousGallery) => cleanupMap(previousGallery))
+      setPageLayouts((previousLayouts) => cleanupMap(previousLayouts))
+      setPageSectionSizes((previousSizes) => cleanupMap(previousSizes))
+
+      setFormData((fd) => {
+        const nextImages = { ...fd.pageImages }
+        const nextFileNames = { ...fd.pageImageFileNames }
+        delete nextImages[removedRaw]
+        delete nextFileNames[removedRaw]
+        if (removedKey) {
+          delete nextImages[removedKey]
+          delete nextFileNames[removedKey]
+        }
+        return { ...fd, pageImages: nextImages, pageImageFileNames: nextFileNames }
+      })
+
+      return next
+    })
+  }
+
+  const duplicatePage = (pageIndex: number) => {
+    setPageNamingError("")
+
+    setPageNamesArray((previous) => {
+      if (pageIndex < 0 || pageIndex >= previous.length) return previous
+
+      const sourceRaw = previous[pageIndex] ?? ""
+      const sourceKey = sourceRaw.trim()
+      const baseName = sourceKey || `Page ${pageIndex + 1}`
+
+      const existing = new Set(previous.map((name) => name.trim().toLowerCase()))
+      let candidate = `${baseName} Copy`
+      let copyIndex = 2
+      while (existing.has(candidate.trim().toLowerCase())) {
+        candidate = `${baseName} Copy ${copyIndex}`
+        copyIndex += 1
+      }
+
+      const pick = <T extends Record<string, unknown>>(source: T): unknown => {
+        if (sourceKey && source[sourceKey] !== undefined) return source[sourceKey]
+        return source[sourceRaw]
+      }
+
+      setPageCarousel((previousCarousel) => {
+        const value = pick(previousCarousel)
+        if (value === undefined) return previousCarousel
+        return { ...previousCarousel, [candidate]: value as number }
+      })
+
+      setPageGallery((previousGallery) => {
+        const value = pick(previousGallery)
+        if (value === undefined) return previousGallery
+        return { ...previousGallery, [candidate]: value as number }
+      })
+
+      setPageLayouts((previousLayouts) => {
+        const value = pick(previousLayouts)
+        if (value === undefined) return previousLayouts
+        return { ...previousLayouts, [candidate]: value as string[] }
+      })
+
+      setPageSectionSizes((previousSizes) => {
+        const value = pick(previousSizes)
+        if (value === undefined) return previousSizes
+        return { ...previousSizes, [candidate]: value as string[] }
+      })
+
+      setFormData((fd) => {
+        const sourceImages = (sourceKey && fd.pageImages[sourceKey]) ? fd.pageImages[sourceKey] : fd.pageImages[sourceRaw]
+        const sourceFileNames = (sourceKey && fd.pageImageFileNames[sourceKey]) ? fd.pageImageFileNames[sourceKey] : fd.pageImageFileNames[sourceRaw]
+        return {
+          ...fd,
+          pageImages: sourceImages ? { ...fd.pageImages, [candidate]: { ...sourceImages } } : fd.pageImages,
+          pageImageFileNames: sourceFileNames ? { ...fd.pageImageFileNames, [candidate]: { ...sourceFileNames } } : fd.pageImageFileNames,
+        }
+      })
+
+      return [...previous, candidate]
+    })
+  }
+
+  const s7UploadFile = async (file: File, pageName: string, zone: string) => {
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const compressed = await resizeImage(reader.result as string)
+      setFormData(prev => ({
+        ...prev,
+        pageImages: { ...prev.pageImages, [pageName]: { ...(prev.pageImages?.[pageName] || {}), [zone]: compressed } },
+        pageImageFileNames: { ...prev.pageImageFileNames, [pageName]: { ...(prev.pageImageFileNames?.[pageName] || {}), [zone]: file.name } },
+      }))
+    }
+    reader.readAsDataURL(file)
+  }
+
+  const s7RemoveAsset = (pageName: string, zone: string) => {
+    setFormData(prev => {
+      const imgs = { ...prev.pageImages }
+      const fns = { ...prev.pageImageFileNames }
+      if (imgs[pageName]) {
+        const nextPageImages = { ...imgs[pageName] }
+        delete nextPageImages[zone]
+        imgs[pageName] = nextPageImages
+      }
+      if (fns[pageName]) {
+        const nextPageFileNames = { ...fns[pageName] }
+        delete nextPageFileNames[zone]
+        fns[pageName] = nextPageFileNames
+      }
+      return { ...prev, pageImages: imgs, pageImageFileNames: fns }
+    })
+  }
+
+  const getReadableLayoutRows = (pageName: string): string[] => {
+    const rows = pageLayouts?.[pageName] || []
+    if (!rows.length) return []
+    return rows.map((token) => {
+      if (token.startsWith("row:")) {
+        return token
+          .slice(4)
+          .split("|")
+          .map((value) => value.trim())
+          .filter(Boolean)
+          .join(" + ")
+      }
+      return token
+    })
+  }
+
+  const homeLayoutRows = getReadableLayoutRows("Home")
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8">
+    <div className="max-w-4xl mx-auto space-y-8 px-4 sm:px-6 py-4 sm:py-0">
       <div>
-        <h1 className="text-3xl font-bold">Create New Project</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold">Create New Project</h1>
         <p className="text-muted-foreground mt-2">
           Start building your website with AI assistance
         </p>
       </div>
 
       {/* Progress Indicator */}
-      <div className="flex items-center justify-center space-x-4 mb-8">
-        <div className={`flex items-center ${currentStep >= 1 ? "text-blue-600" : "text-gray-400"}`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep >= 1 ? "border-blue-600 bg-blue-50" : "border-gray-300"}`}>
-            1
+      <div className="flex items-center justify-center space-x-2 mb-8 overflow-x-auto px-4">
+        {[
+          { n: 1, label: "Info" },
+          { n: 2, label: "Template" },
+          { n: 3, label: "Style" },
+          { n: 4, label: "Navigation & Pages" },
+          { n: 5, label: "Stage Builder" },
+          { n: 6, label: "Assets" },
+          { n: 7, label: "Generate" },
+        ].map(({ n, label }, idx, arr) => (
+          <div key={n} className="flex items-center">
+            <div className={`flex items-center ${currentStep >= n ? "text-blue-600" : "text-gray-400"}`}>
+              <div className={`w-8 h-8 rounded-full flex items-center justify-center border-2 text-sm ${currentStep >= n ? "border-blue-600 bg-blue-50" : "border-gray-300"}`}>{n}</div>
+              <span className="ml-1 font-medium text-sm hidden sm:inline">{label}</span>
+            </div>
+            {idx < arr.length - 1 && <div className={`w-4 h-1 mx-1 ${currentStep > n ? "bg-blue-600" : "bg-gray-300"}`} />}
           </div>
-          <span className="ml-2 font-medium">Info & Upload</span>
-        </div>
-        <div className={`w-16 h-1 ${currentStep >= 2 ? "bg-blue-600" : "bg-gray-300"}`}></div>
-        <div className={`flex items-center ${currentStep >= 2 ? "text-blue-600" : "text-gray-400"}`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep >= 2 ? "border-blue-600 bg-blue-50" : "border-gray-300"}`}>
-            2
-          </div>
-          <span className="ml-2 font-medium">Category</span>
-        </div>
-        <div className={`w-16 h-1 ${currentStep >= 3 ? "bg-blue-600" : "bg-gray-300"}`}></div>
-        <div className={`flex items-center ${currentStep >= 3 ? "text-blue-600" : "text-gray-400"}`}>
-          <div className={`w-10 h-10 rounded-full flex items-center justify-center border-2 ${currentStep >= 3 ? "border-blue-600 bg-blue-50" : "border-gray-300"}`}>
-            3
-          </div>
-          <span className="ml-2 font-medium">Template</span>
-        </div>
+        ))}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-8">
@@ -439,7 +722,7 @@ export default function NewProjectPage() {
             <CardDescription>Tell us about your brand and business</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="brandName">Brand Name</Label>
                 <Input
@@ -449,22 +732,57 @@ export default function NewProjectPage() {
                   onChange={(e) => setFormData({ ...formData, brandName: e.target.value })}
                 />
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="primaryColor">Primary Brand Color *</Label>
-                <div className="flex gap-2">
-                  <Input
-                    id="primaryColor"
-                    type="color"
-                    value={formData.primaryColor}
-                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                    className="w-20 h-10"
-                  />
-                  <Input
-                    type="text"
-                    value={formData.primaryColor}
-                    onChange={(e) => setFormData({ ...formData, primaryColor: e.target.value })}
-                    placeholder="#0056b3"
-                  />
+              <div className="space-y-2 md:col-span-2">
+                <div className="flex items-center justify-between mb-1">
+                  <Label>Brand Colors <span className="text-gray-400 font-normal text-xs">(primary first — add up to 6)</span></Label>
+                  {formData.brandColors.length < 6 && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData(prev => ({ ...prev, brandColors: [...prev.brandColors, '#cccccc'] }))}
+                      className="text-xs font-medium text-blue-600 hover:text-blue-800 border border-blue-300 hover:border-blue-500 rounded-lg px-2.5 py-1 transition-colors"
+                    >
+                      + Add Color
+                    </button>
+                  )}
+                </div>
+                <div className="flex flex-wrap gap-3">
+                  {formData.brandColors.map((color, ci) => (
+                    <div key={ci} className="relative flex items-center gap-1.5 bg-gray-50 border border-gray-200 rounded-xl p-2">
+                      <input
+                        type="color"
+                        value={color}
+                        onChange={e => setFormData(prev => {
+                          const c = [...prev.brandColors]; c[ci] = e.target.value
+                          return { ...prev, brandColors: c, ...(ci === 0 ? { primaryColor: e.target.value } : {}) }
+                        })}
+                        className="w-9 h-9 rounded-lg border-0 cursor-pointer p-0"
+                        title={ci === 0 ? 'Primary color' : `Color ${ci + 1}`}
+                      />
+                      <input
+                        type="text"
+                        value={color}
+                        maxLength={7}
+                        onChange={e => setFormData(prev => {
+                          const c = [...prev.brandColors]; c[ci] = e.target.value
+                          return { ...prev, brandColors: c, ...(ci === 0 ? { primaryColor: e.target.value } : {}) }
+                        })}
+                        className="w-20 text-xs font-mono border border-gray-300 rounded-lg px-2 py-1.5 focus:outline-none focus:border-blue-500 bg-white"
+                      />
+                      <span className="text-[10px] text-gray-400 font-medium">{ci === 0 ? 'Primary' : ci === 1 ? 'Secondary' : ci === 2 ? 'Accent' : `Color ${ci+1}`}</span>
+                      {formData.brandColors.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => {
+                            const c = prev.brandColors.filter((_, i) => i !== ci)
+                            return { ...prev, brandColors: c, primaryColor: c[0] || '#0056b3' }
+                          })}
+                          className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-500 text-white rounded-full text-[10px] flex items-center justify-center hover:bg-red-600 leading-none"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -481,10 +799,13 @@ export default function NewProjectPage() {
               />
               {formData.logo && (
                 <div className="mt-2 relative inline-block">
-                  <img
+                  <Image
                     src={formData.logo}
                     alt="Logo preview"
+                    width={160}
+                    height={80}
                     className="h-20 w-auto border rounded"
+                    unoptimized
                   />
                   <button
                     type="button"
@@ -493,40 +814,6 @@ export default function NewProjectPage() {
                   >
                     ×
                   </button>
-                </div>
-              )}
-            </div>
-
-            {/* Images Upload */}
-            <div className="space-y-2">
-              <Label htmlFor="images">Portfolio Images</Label>
-              <Input
-                id="images"
-                type="file"
-                accept="image/*"
-                multiple
-                onChange={handleImagesUpload}
-                className="cursor-pointer"
-              />
-              <p className="text-sm text-gray-500">Upload multiple images for your portfolio or gallery</p>
-              {formData.images.length > 0 && (
-                <div className="grid grid-cols-4 gap-2 mt-2">
-                  {formData.images.map((img, index) => (
-                    <div key={index} className="relative">
-                      <img
-                        src={img}
-                        alt={`Image ${index + 1}`}
-                        className="h-20 w-20 object-cover border rounded"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(index)}
-                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs"
-                      >
-                        ×
-                      </button>
-                    </div>
-                  ))}
                 </div>
               )}
             </div>
@@ -571,6 +858,75 @@ export default function NewProjectPage() {
                   rows={5}
                 />
               </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Our Services */}
+        <Card>
+          <CardHeader>
+            <CardTitle>Our Services</CardTitle>
+            <CardDescription>What services or products do you offer?</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="servicesDescription">Services Overview</Label>
+              <Textarea
+                id="servicesDescription"
+                placeholder="Describe the main services or products you offer..."
+                value={formData.servicesDescription}
+                onChange={(e) => setFormData({ ...formData, servicesDescription: e.target.value })}
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Individual Services <span className="text-gray-400 font-normal text-xs">(press Enter or comma to add)</span></Label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="e.g. Web Design, SEO, Branding…"
+                  value={serviceInput}
+                  onChange={e => setServiceInput(e.target.value)}
+                  onKeyDown={e => {
+                    if ((e.key === 'Enter' || e.key === ',') && serviceInput.trim()) {
+                      e.preventDefault()
+                      const val = serviceInput.trim().replace(/,$/, '')
+                      if (val && !formData.servicesList.includes(val)) {
+                        setFormData(prev => ({ ...prev, servicesList: [...prev.servicesList, val] }))
+                      }
+                      setServiceInput("")
+                    }
+                  }}
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    const val = serviceInput.trim()
+                    if (val && !formData.servicesList.includes(val)) {
+                      setFormData(prev => ({ ...prev, servicesList: [...prev.servicesList, val] }))
+                    }
+                    setServiceInput("")
+                  }}
+                >
+                  Add
+                </Button>
+              </div>
+              {formData.servicesList.length > 0 && (
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {formData.servicesList.map((s, i) => (
+                    <span key={i} className="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-700 text-sm px-3 py-1 rounded-full">
+                      {s}
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, servicesList: prev.servicesList.filter((_, idx) => idx !== i) }))}
+                        className="text-blue-400 hover:text-blue-700 font-bold leading-none ml-1"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  ))}
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -664,8 +1020,39 @@ export default function NewProjectPage() {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>Business Category</CardTitle>
+            <CardDescription>Pick your business type here so template suggestions are accurate.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <CategorySelector selectedCategory={selectedCategory} onSelect={handleCategorySelect} />
+
+            <div className="mt-6 p-4 sm:p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200">
+              <div className="flex flex-col sm:flex-row items-start gap-3 sm:space-x-4">
+                <div className="text-4xl">🤖</div>
+                <div className="flex-1">
+                  <h4 className="text-lg font-semibold mb-2">Auto-Choose with AI</h4>
+                  <p className="text-gray-700 text-sm mb-4">Let AI pick the best category + template from your business details.</p>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setUseAI(true)
+                      handleAIRecommendation()
+                      setCurrentStep(2)
+                    }}
+                    className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  >
+                    ✨ Use AI Recommendation
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Step 1 Navigation */}
-        <div className="flex justify-between gap-4">
+        <div className="flex flex-wrap justify-between gap-4">
           <Button
             type="button"
             variant="outline"
@@ -675,14 +1062,14 @@ export default function NewProjectPage() {
             Cancel
           </Button>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-500">
-              Next: Choose category & template
+            <span className="text-sm text-gray-500 hidden sm:inline">
+              Next: Choose template
             </span>
             <Button 
               type="button" 
               size="lg" 
               onClick={handleNext}
-              disabled={!formData.name || !formData.aboutUs}
+              disabled={!formData.name || !formData.aboutUs || !selectedCategory}
             >
               Save & Continue →
             </Button>
@@ -691,125 +1078,22 @@ export default function NewProjectPage() {
           </>
         )}
 
-        {/* Step 2: Category Selection */}
+        {/* Step 2: Template Selection */}
         {currentStep === 2 && (
-          <>
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Choose Your Business Category</CardTitle>
-                    <CardDescription>Select the category that best fits your business</CardDescription>
-                  </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setCurrentStep(1)}
-                    className="text-blue-600 hover:text-blue-700"
-                  >
-                    ✏️ Edit Info
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-3 gap-6">
-                  <div
-                    onClick={() => handleCategorySelect("ecommerce")}
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg ${
-                      selectedCategory === "ecommerce" ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="text-5xl mb-4">🛒</div>
-                    <h3 className="text-xl font-semibold mb-2">E-Commerce</h3>
-                    <p className="text-gray-600 text-sm">
-                      Online stores, marketplaces, and digital product sales
-                    </p>
-                  </div>
-
-                  <div
-                    onClick={() => handleCategorySelect("business")}
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg ${
-                      selectedCategory === "business" ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="text-5xl mb-4">💼</div>
-                    <h3 className="text-xl font-semibold mb-2">Business & Merchant</h3>
-                    <p className="text-gray-600 text-sm">
-                      Restaurants, salons, real estate, clinics, and services
-                    </p>
-                  </div>
-
-                  <div
-                    onClick={() => handleCategorySelect("general")}
-                    className={`border-2 rounded-lg p-6 cursor-pointer transition-all hover:shadow-lg ${
-                      selectedCategory === "general" ? "border-blue-600 bg-blue-50" : "border-gray-200 hover:border-gray-300"
-                    }`}
-                  >
-                    <div className="text-5xl mb-4">🚀</div>
-                    <h3 className="text-xl font-semibold mb-2">General</h3>
-                    <p className="text-gray-600 text-sm">
-                      Portfolios, blogs, agencies, and landing pages
-                    </p>
-                  </div>
-                </div>
-
-                {/* AI Recommendation Option */}
-                <div className="mt-8 p-6 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg border-2 border-purple-200">
-                  <div className="flex items-start space-x-4">
-                    <div className="text-4xl">🤖</div>
-                    <div className="flex-1">
-                      <h4 className="text-lg font-semibold mb-2">Let AI Choose For You</h4>
-                      <p className="text-gray-700 text-sm mb-4">
-                        Our AI will analyze your business information and automatically select the best template category and theme for you.
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setUseAI(true)
-                          handleAIRecommendation()
-                          setCurrentStep(3)
-                        }}
-                        className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                      >
-                        ✨ Use AI Recommendation
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Step 2 Navigation */}
-            <div className="flex justify-between gap-4">
-              <Button
-                type="button"
-                variant="outline"
-                size="lg"
-                onClick={handlePrevious}
-              >
-                ← Back to Info
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={() => router.push("/dashboard")}
-              >
-                Cancel
-              </Button>
-            </div>
-          </>
-        )}
-
-        {/* Step 3: Template Selection */}
-        {currentStep === 3 && (
           <>
             {/* Project Summary Card */}
             <div className="bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg p-4 border border-gray-200 mb-6">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
                   {formData.logo && (
-                    <img src={formData.logo} alt="Logo" className="h-12 w-12 object-contain rounded border" />
+                    <Image
+                      src={formData.logo}
+                      alt="Logo"
+                      width={48}
+                      height={48}
+                      className="h-12 w-12 object-contain rounded border"
+                      unoptimized
+                    />
                   )}
                   <div>
                     <h3 className="font-semibold text-gray-900">{formData.name || "Your Project"}</h3>
@@ -848,7 +1132,7 @@ export default function NewProjectPage() {
                       variant="outline"
                       size="sm"
                       onClick={() => {
-                        setCurrentStep(2)
+                        setCurrentStep(1)
                         setSelectedTemplate("")
                       }}
                     >
@@ -858,21 +1142,15 @@ export default function NewProjectPage() {
                 </div>
               </div>
 
-              {/* Filter Tabs */}
+              {/* Template Grid */}
               {!useAI && (
-                <div className="mb-6 border-b">
-                  <div className="flex space-x-6">
-                    <button className="pb-3 border-b-2 border-blue-600 text-blue-600 font-medium text-sm">
-                      Popular
-                    </button>
-                    <button className="pb-3 text-gray-600 hover:text-gray-900 font-medium text-sm">
-                      Latest
-                    </button>
-                    <button className="pb-3 text-gray-600 hover:text-gray-900 font-medium text-sm">
-                      Featured
-                    </button>
-                  </div>
-                </div>
+                <TemplateGrid
+                  templatesByCategory={templates}
+                  selectedCategory={selectedCategory}
+                  selectedTemplate={selectedTemplate}
+                  onSelectTemplate={handleTemplateSelect}
+                  onSelectCategory={setSelectedCategory}
+                />
               )}
 
               {/* AI Recommendation Banner */}
@@ -908,209 +1186,577 @@ export default function NewProjectPage() {
                 </div>
               )}
 
-              {/* Templates Grid */}
-              {!useAI && (
-                <div className="grid md:grid-cols-3 gap-6">
-                  {selectedCategory && templates[selectedCategory as keyof typeof templates]?.map((template, index) => {
-                    const gradients = [
-                      'from-blue-100 to-blue-200',
-                      'from-purple-100 to-purple-200',
-                      'from-green-100 to-green-200',
-                      'from-orange-100 to-orange-200',
-                      'from-pink-100 to-pink-200',
-                      'from-teal-100 to-teal-200',
-                    ]
-                    return (
-                      <div
-                        key={template.id}
-                        onClick={() => handleTemplateSelect(template.id)}
-                        className={`group cursor-pointer transition-all duration-200 ${
-                          selectedTemplate === template.id ? "scale-[1.02]" : "hover:scale-[1.02]"
-                        }`}
-                      >
-                        {/* Preview Image */}
-                        <div className={`relative rounded-lg overflow-hidden shadow-md border-2 ${
-                          selectedTemplate === template.id ? "border-blue-600 shadow-blue-200" : "border-gray-200 group-hover:border-gray-300 group-hover:shadow-lg"
-                        }`}>
-                          <div className={`aspect-[4/3] bg-gradient-to-br ${gradients[index % gradients.length]} flex items-center justify-center relative`}>
-                            {/* Template Icon/Preview */}
-                            <div className="text-7xl opacity-80">{template.icon}</div>
-                            
-                            {/* Hover Overlay */}
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 flex items-center justify-center">
-                              <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                                <div className="bg-white px-4 py-2 rounded-full shadow-lg font-medium text-sm">
-                                  {selectedTemplate === template.id ? "✓ Selected" : "Click to Select"}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Selected Badge */}
-                            {selectedTemplate === template.id && (
-                              <div className="absolute top-3 right-3 bg-blue-600 text-white px-3 py-1 rounded-full text-xs font-bold flex items-center space-x-1">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                                <span>SELECTED</span>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        {/* Template Info */}
-                        <div className="mt-3">
-                          <h3 className="text-base font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                            {template.name}
-                          </h3>
-                          <p className="text-sm text-gray-600 mt-1 line-clamp-2">
-                            {template.description}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
-              )}
             </div>
 
-            {/* Step 3 Navigation */}
-            <div className="flex justify-between items-center gap-4 pt-6">
+            {/* Step 2 Navigation */}
+            <div className="flex flex-wrap justify-between items-center gap-4 pt-6">
               <Button
                 type="button"
                 variant="outline"
                 size="lg"
                 onClick={handlePrevious}
-                className="px-8"
+                className="px-4 sm:px-8"
               >
-                ← Back to Categories
+                ← Back to Info
               </Button>
               <div className="flex items-center gap-3">
                 {selectedTemplate && (
-                  <span className="text-sm text-gray-600">
+                  <span className="hidden sm:block text-sm text-gray-600">
                     Template selected: <span className="font-semibold text-blue-600">
                       {Object.values(templates).flat().find(t => t.id === selectedTemplate)?.name}
                     </span>
                   </span>
                 )}
                 <Button 
-                  type="submit" 
+                  type="button"
                   size="lg"
-                  className="px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
-                  disabled={loading || !selectedTemplate}
+                  onClick={handleNext}
+                  className="px-4 sm:px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                  disabled={!selectedTemplate}
                 >
-                  {loading ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Creating Project...
-                    </>
-                  ) : (
-                    "Create Project & Launch Builder →"
-                  )}
+                  Continue to Style →
                 </Button>
               </div>
             </div>
           </>
         )}
 
-        {/* Website Structure - Hidden for now, can be added back if needed */}
-        {false && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Website Structure</CardTitle>
-            <CardDescription>Define the pages for your website</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="numberOfPages">Number of Pages</Label>
-              <Input
-                id="numberOfPages"
-                type="number"
-                min="1"
-                max="10"
-                value={formData.numberOfPages}
-                onChange={(e) => {
-                  const numPages = parseInt(e.target.value, 10);
-                  if (!isNaN(numPages) && numPages > 0 && numPages <= 10) {
-                    const newPageNames = Array(numPages)
-                      .fill("")
-                      .map((_, i) => formData.pageNames.split(",")[i] || `Page ${i + 1}`);
-                    setFormData({
-                      ...formData,
-                      numberOfPages: e.target.value,
-                      pageNames: newPageNames.join(","),
-                    });
-                  }
-                }}
+        {/* Step 3: Design Style Selection */}
+        {currentStep === 3 && (
+          <Card className="p-4 sm:p-8">
+            <DesignStylePicker
+              selectedStyle={selectedDesignStyle}
+              onStyleChange={setSelectedDesignStyle}
+              className="mb-6"
+              brandColors={formData.brandColors}
+            />
+
+            <div className="mb-6 pt-6 border-t">
+              <OptionSelector
+                title="🎯 Content Tone & Style"
+                options={CONTENT_TONES}
+                selectedOptions={selectedTone ? [selectedTone] : []}
+                onSelectionChange={(tones) => setSelectedTone(tones[0] || "")}
+                multiSelect={false}
               />
+              <p className="text-sm text-gray-500 mt-2">
+                Choose the writing style and tone for your website content.
+              </p>
             </div>
-            <div className="space-y-2">
-              <Label>Page Tabs</Label>
-              <div className="flex flex-wrap gap-2">
-                {formData.pageNames.split(",").map((pageName, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <Input
-                      type="text"
-                      value={pageName}
-                      onChange={(e) => {
-                        const newPageNames = formData.pageNames.split(",");
-                        newPageNames[index] = e.target.value;
-                        setFormData({ ...formData, pageNames: newPageNames.join(",") });
-                      }}
-                      className="w-32"
-                    />
-                    <span className="text-sm text-gray-500">Page {index + 1}</span>
-                  </div>
-                ))}
-              </div>
+
+            <div className="mb-6 pt-6 border-t">
+              <h3 className="text-base font-bold text-gray-900 mb-1">🔤 Font Family</h3>
+              <p className="text-sm text-gray-500 mb-3">Choose your preferred font, or let AI pick the best match for your design.</p>
+              <Select value={selectedFont} onValueChange={setSelectedFont}>
+                <SelectTrigger className="w-full max-w-[420px]">
+                  <SelectValue placeholder="Choose a font" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectGroup>
+                    <SelectLabel>AI</SelectLabel>
+                    {FONT_OPTIONS.filter((font) => font.category === "AI").map((font) => (
+                      <SelectItem key={font.id} value={font.id}>
+                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Sans Serif</SelectLabel>
+                    {FONT_OPTIONS.filter((font) => font.category === "Sans").map((font) => (
+                      <SelectItem key={font.id} value={font.id}>
+                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Serif</SelectLabel>
+                    {FONT_OPTIONS.filter((font) => font.category === "Serif").map((font) => (
+                      <SelectItem key={font.id} value={font.id}>
+                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Display</SelectLabel>
+                    {FONT_OPTIONS.filter((font) => font.category === "Display").map((font) => (
+                      <SelectItem key={font.id} value={font.id}>
+                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                  <SelectGroup>
+                    <SelectLabel>Monospace</SelectLabel>
+                    {FONT_OPTIONS.filter((font) => font.category === "Mono").map((font) => (
+                      <SelectItem key={font.id} value={font.id}>
+                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectGroup>
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-2">Selected: <span className="font-semibold text-gray-700">{getFontLabel(selectedFont)}</span></p>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="template">Choose a Template</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div
-                  className={`border rounded-lg p-4 cursor-pointer ${formData.template === "landing" ? "border-blue-500" : "border-gray-300"}`}
-                  onClick={() => setFormData({ ...formData, template: "landing" })}
-                >
-                  <h4 className="text-lg font-semibold">📄 Landing Page</h4>
-                  <p className="text-sm text-gray-500">Start from scratch with empty files</p>
-                </div>
-                <div
-                  className={`border rounded-lg p-4 cursor-pointer ${formData.template === "web" ? "border-blue-500" : "border-gray-300"}`}
-                  onClick={() => setFormData({ ...formData, template: "web" })}
-                >
-                  <h4 className="text-lg font-semibold">🚀 Web</h4>
-                  <p className="text-sm text-gray-500">Modern landing page with hero and features</p>
-                </div>
-                <div
-                  className={`border rounded-lg p-4 cursor-pointer ${formData.template === "ecommerce" ? "border-blue-500" : "border-gray-300"}`}
-                  onClick={() => setFormData({ ...formData, template: "ecommerce" })}
-                >
-                  <h4 className="text-lg font-semibold">💼 Ecommerce</h4>
-                  <p className="text-sm text-gray-500">Personal portfolio with projects showcase</p>
-                </div>
-              </div>
+            
+            <div className="flex flex-wrap justify-between items-center pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handlePrevious}
+                className="px-4 sm:px-8"
+              >
+                ← Back to Templates
+              </Button>
+              <Button 
+                type="button"
+                size="lg"
+                onClick={handleNext}
+                className="px-4 sm:px-8"
+                disabled={!selectedDesignStyle || !selectedTone}
+              >
+                Continue to Navigation & Pages →
+              </Button>
             </div>
-          </CardContent>
-        </Card>
+          </Card>
         )}
 
-        {/* Old Actions - Removed */}
-        {false && (
-        <div className="flex gap-4">
-          <Button type="submit" size="lg" disabled={loading || !formData.name}>
-            {loading ? "Creating..." : "Create Project"}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            size="lg"
-            onClick={() => router.push("/dashboard")}
-          >
-            Cancel
-          </Button>
-        </div>
+        {/* Step 4: Navigation & Pages */}
+        {currentStep === 4 && (
+          <Card className="p-4 sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Navigation & Pages Setup</h2>
+              <p className="text-gray-500 text-sm mt-1">Set how visitors navigate and define your page list before arranging row layouts.</p>
+            </div>
+
+            <NavStyleSelector selectedNavType={selectedNavType} onChange={setSelectedNavType} />
+
+            <div className="mt-6 pt-6 border-t">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Pages</label>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => updatePageCount(Math.max(1, pageNamesArray.length - 1))}
+                  className="h-10 px-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50 font-semibold"
+                >
+                  −
+                </button>
+                <input
+                  type="number"
+                  min={1}
+                  value={pageNamesArray.length}
+                  onChange={(event) => {
+                    const parsed = Number(event.target.value)
+                    if (!Number.isFinite(parsed)) return
+                    updatePageCount(Math.max(1, Math.floor(parsed)))
+                  }}
+                  className="h-10 w-24 border-2 border-blue-300 rounded-xl px-3 text-sm font-semibold focus:outline-none focus:border-blue-600"
+                />
+                <button
+                  type="button"
+                  onClick={() => updatePageCount(pageNamesArray.length + 1)}
+                  className="h-10 px-3 rounded-xl border-2 border-gray-300 text-gray-700 hover:border-blue-400 hover:bg-blue-50 font-semibold"
+                >
+                  +
+                </button>
+                <button
+                  type="button"
+                  onClick={() => updatePageCount(pageNamesArray.length + 1)}
+                  className="h-10 px-4 rounded-xl border-2 border-blue-300 text-blue-700 hover:border-blue-500 hover:bg-blue-50 text-sm font-semibold"
+                >
+                  + Add Page
+                </button>
+              </div>
+            </div>
+
+            <div className="mt-6 space-y-3">
+              {pageNamesArray.map((pageName, pageIndex) => {
+                const isFirst = pageIndex === 0
+                return (
+                  <div key={pageIndex} className="flex items-center gap-3 flex-wrap p-3 rounded-xl border border-gray-200 bg-gray-50">
+                    <span className="inline-flex items-center justify-center bg-blue-600 text-white text-xs font-bold rounded-lg px-2.5 py-1.5 min-w-[60px]">
+                      Page {pageIndex + 1}
+                    </span>
+                    {isFirst ? (
+                      <span className="flex items-center gap-1.5 bg-white border border-gray-300 rounded-lg px-3 py-1.5 text-sm font-semibold text-gray-500">🔒 Home</span>
+                    ) : (
+                      <>
+                        <input
+                          type="text"
+                          value={pageName}
+                          onChange={(event) => updatePageName(pageIndex, event.target.value)}
+                          className="border-2 border-blue-300 rounded-lg px-3 py-1.5 text-sm font-semibold w-full sm:min-w-[220px] sm:w-auto flex-1 focus:outline-none focus:border-blue-600 bg-white"
+                          placeholder={`Enter page name (Page ${pageIndex + 1})`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => duplicatePage(pageIndex)}
+                          className="px-3 py-1.5 rounded-lg border border-indigo-200 text-indigo-700 hover:bg-indigo-50 text-xs font-semibold"
+                        >
+                          Duplicate
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => removePage(pageIndex)}
+                          className="px-3 py-1.5 rounded-lg border border-red-200 text-red-700 hover:bg-red-50 text-xs font-semibold"
+                        >
+                          Remove
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+
+            {pageNamingError && (
+              <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                {pageNamingError}
+              </div>
+            )}
+
+            <div className="flex flex-wrap justify-between items-center pt-6 border-t mt-6">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handlePrevious}
+                className="px-4 sm:px-8"
+              >
+                ← Back to Style
+              </Button>
+              <Button
+                type="button"
+                size="lg"
+                onClick={() => {
+                  const userPages = pageNamesArray
+                    .map((name, index) => ({ index, value: name.trim() }))
+                    .filter((entry) => entry.index > 0)
+
+                  if (userPages.some((entry) => !entry.value)) {
+                    setPageNamingError("Please name all pages before continuing.")
+                    return
+                  }
+
+                  const seen = new Set<string>()
+                  for (const entry of userPages) {
+                    const key = entry.value.toLowerCase()
+                    if (seen.has(key)) {
+                      setPageNamingError("Page names must be unique. Please rename duplicates.")
+                      return
+                    }
+                    seen.add(key)
+                  }
+
+                  if (pageNamesArray.length < 1) {
+                    setPageNamingError("Please keep at least one page.")
+                    return
+                  }
+                  setPageNamingError("")
+                  handleNext()
+                }}
+                className="px-4 sm:px-8"
+              >
+                Continue to Stage Builder →
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Step 5: Stage Builder */}
+        {currentStep === 5 && (
+          <Card className="p-4 sm:p-8">
+            <div className="mb-6">
+              <h2 className="text-xl font-bold text-gray-900">Scratch Stage Builder</h2>
+              <p className="text-gray-500 text-sm mt-1">Arrange rows and blocks page-by-page, including Carousel/Gallery, drag-drop ordering, and section sizes.</p>
+            </div>
+
+            <div className="mb-6 rounded-xl border border-blue-200 bg-blue-50 p-4">
+              <h4 className="font-semibold text-blue-900 mb-2">Reflected from Steps 3 & 4</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-sm">
+                <div>
+                  <span className="text-blue-700">Design Style:</span>
+                  <div className="font-medium text-blue-900">{selectedDesignStyle}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700">Content Tone:</span>
+                  <div className="font-medium text-blue-900">{selectedTone}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700">Font:</span>
+                  <div className="font-medium text-blue-900">{getFontLabel(selectedFont)}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700">Navigation:</span>
+                  <div className="font-medium text-blue-900">{selectedNavType}</div>
+                </div>
+                <div>
+                  <span className="text-blue-700">Pages:</span>
+                  <div className="font-medium text-blue-900">{pageNamesArray.length}</div>
+                </div>
+              </div>
+            </div>
+
+            <StageBuilder
+              pageNames={pageNamesArray}
+              selectedNavType={selectedNavType}
+              selectedSections={selectedSections}
+              selectedTone={selectedTone}
+              selectedFeatures={selectedFeatures}
+              selectedHeroLayout={formData.heroLayout}
+              selectedContentStructure={formData.contentStructure}
+              selectedFooterStyle={formData.footerStyle}
+              selectedMobileLayout={formData.mobileLayout}
+              onPageCountChange={updatePageCount}
+              onNavTypeChange={setSelectedNavType}
+              onSectionsChange={setSelectedSections}
+              onToneChange={setSelectedTone}
+              onFeaturesChange={setSelectedFeatures}
+              onHeroLayoutChange={(value) => setFormData((previous) => ({ ...previous, heroLayout: value }))}
+              onContentStructureChange={(value) => setFormData((previous) => ({ ...previous, contentStructure: value }))}
+              onFooterStyleChange={(value) => setFormData((previous) => ({ ...previous, footerStyle: value }))}
+              onMobileLayoutChange={(value) => setFormData((previous) => ({ ...previous, mobileLayout: value }))}
+              onPageNameChange={updatePageName}
+              pageLayouts={pageLayouts}
+              pageSectionSizes={pageSectionSizes}
+              pageCarousel={pageCarousel}
+              pageGallery={pageGallery}
+              onPageLayoutsChange={setPageLayouts}
+              onPageSectionSizesChange={setPageSectionSizes}
+              onPageCarouselChange={setPageCarousel}
+              onPageGalleryChange={setPageGallery}
+              previewPrimaryColor={formData.brandColors?.[0] || formData.primaryColor}
+            />
+            
+            <div className="flex flex-wrap justify-between items-center pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handlePrevious}
+                className="px-4 sm:px-8"
+              >
+                ← Back to Navigation & Pages
+              </Button>
+              <Button 
+                type="button"
+                size="lg"
+                onClick={handleNext}
+                className="px-4 sm:px-8"
+                disabled={selectedSections.length === 0 || !selectedTone}
+              >
+                Continue to Assets →
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Step 6: Pages & Images */}
+        {currentStep === 6 && (
+          <Card className="p-6 sm:p-8">
+            <div className="mb-6 rounded-xl border border-purple-200 bg-purple-50 p-4">
+              <h4 className="font-semibold text-purple-900 mb-2">Reflected from Stage Builder (Step 5)</h4>
+              <div className="space-y-2 text-sm text-purple-900">
+                <div><span className="text-purple-700">Navigation:</span> <span className="font-medium">{selectedNavType}</span></div>
+                <div><span className="text-purple-700">Pages:</span> <span className="font-medium">{pageNamesArray.join(', ')}</span></div>
+                <div>
+                  <span className="text-purple-700">Home Layout Rows:</span>
+                  <div className="font-medium mt-1">{homeLayoutRows.length ? homeLayoutRows.join(' → ') : 'Will use default template rows'}</div>
+                </div>
+              </div>
+            </div>
+
+            <StageAssets
+              pageNames={pageNamesArray}
+              baseZones={s7BaseZones}
+              pageCarousel={pageCarousel}
+              pageGallery={pageGallery}
+              pageImages={formData.pageImages}
+              pageImageFileNames={formData.pageImageFileNames}
+              uploadPickerZone={uploadPickerZone}
+              setUploadPickerZone={setUploadPickerZone}
+              onUploadFile={s7UploadFile}
+              onRemoveAsset={s7RemoveAsset}
+            />
+
+            <div className="flex flex-wrap justify-between items-center pt-6 mt-6 border-t gap-4">
+              <Button type="button" variant="outline" size="lg" onClick={handlePrevious} className="px-4 sm:px-8">
+                ← Back to Stage Builder
+              </Button>
+              <Button type="button" size="lg" onClick={handleNext} className="px-4 sm:px-8 bg-blue-600 hover:bg-blue-700 text-white">
+                Continue to Review →
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        {/* Step 7: Final Summary and Generation */}
+        {currentStep === 7 && (
+          <Card className="p-4 sm:p-8">
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Ready to Generate Your Website!</h2>
+              <p className="text-gray-600">
+                Review your selections below and generate your professional website with AI.
+              </p>
+            </div>
+
+            {/* Comprehensive Summary */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Left Column */}
+              <div className="space-y-6">
+                {/* Template & Style Summary */}
+                <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                  <h4 className="font-semibold text-blue-900 mb-3 flex items-center">
+                    🎨 Design Foundation
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Template:</span>
+                      <span className="font-medium text-blue-900">
+                        {Object.values(templates).flat().find(t => t.id === selectedTemplate)?.name}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Design Style:</span>
+                      <span className="font-medium text-blue-900">Modern {selectedDesignStyle.charAt(0).toUpperCase() + selectedDesignStyle.slice(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Content Tone:</span>
+                      <span className="font-medium text-blue-900">{selectedTone.charAt(0).toUpperCase() + selectedTone.slice(1)}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-blue-700">Font:</span>
+                      <span className="font-medium text-blue-900">{getFontLabel(selectedFont)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Content Summary */}
+                <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h4 className="font-semibold text-green-900 mb-3 flex items-center">
+                    📄 Content & Features
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div>
+                      <span className="text-green-700">Sections ({selectedSections.length}):</span>
+                      <div className="mt-1 text-green-900 font-medium">
+                        {selectedSections.slice(0, 4).join(", ")}
+                        {selectedSections.length > 4 && `, +${selectedSections.length - 4} more`}
+                      </div>
+                    </div>
+                    {selectedFeatures.length > 0 && (
+                      <div>
+                        <span className="text-green-700">Special Features ({selectedFeatures.length}):</span>
+                        <div className="mt-1 text-green-900 font-medium">
+                          {selectedFeatures.slice(0, 3).join(", ")}
+                          {selectedFeatures.length > 3 && `, +${selectedFeatures.length - 3} more`}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column */}
+              <div className="space-y-6">
+                {/* Layout Summary */}
+                <div className="bg-purple-50 p-4 rounded-lg border border-purple-200">
+                  <h4 className="font-semibold text-purple-900 mb-3 flex items-center">
+                    🧱 Stage Structure
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-purple-700">Navigation:</span>
+                      <span className="font-medium text-purple-900">
+                        {selectedNavType.replace('-', ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-purple-700">Stages:</span>
+                      <span className="font-medium text-purple-900">{pageNamesArray.length}</span>
+                    </div>
+                    <div className="text-purple-900 font-medium text-right break-words">
+                      {pageNamesArray.join(', ')}
+                    </div>
+                    <div>
+                      <span className="text-purple-700">Home Layout:</span>
+                      <div className="mt-1 text-purple-900 font-medium break-words">
+                        {homeLayoutRows.length ? homeLayoutRows.join(' → ') : 'Default template layout'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Brand Summary */}
+                <div className="bg-amber-50 p-4 rounded-lg border border-amber-200">
+                  <h4 className="font-semibold text-amber-900 mb-3 flex items-center">
+                    🏷️ Brand Information
+                  </h4>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-amber-700">Project:</span>
+                      <span className="font-medium text-amber-900">{formData.name || 'My Website'}</span>
+                    </div>
+                    {formData.brandName && (
+                      <div className="flex justify-between">
+                        <span className="text-amber-700">Brand:</span>
+                        <span className="font-medium text-amber-900">{formData.brandName}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between items-center">
+                      <span className="text-amber-700">Primary Color:</span>
+                      <div className="flex items-center space-x-2">
+                        <div 
+                          className="w-4 h-4 rounded-full border border-amber-300"
+                          style={{ backgroundColor: formData.primaryColor }}
+                        />
+                        <span className="font-medium text-amber-900">{formData.primaryColor}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap justify-between items-center gap-4 pt-6 border-t">
+              <Button
+                type="button"
+                variant="outline"
+                size="lg"
+                onClick={handlePrevious}
+                className="px-4 sm:px-8"
+              >
+                ← Back to Assets
+              </Button>
+              <div className="flex flex-wrap items-center gap-4">
+                <div className="hidden sm:block text-right">
+                  <div className="text-sm text-gray-600">Ready to generate with:</div>
+                  <div className="text-sm font-medium text-green-600">
+                    ✓ {selectedSections.length} sections
+                    ✓ {selectedFeatures.length} features
+                    ✓ {selectedDesignStyle} style
+                  </div>
+                </div>
+                <Button 
+                  type="submit"
+                  size="lg"
+                  className="px-4 sm:px-8 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white"
+                  disabled={loading}
+                >
+                  {loading ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                      Generating Your Website...
+                    </>
+                  ) : (
+                    <>🚀 Generate Beautiful Website</>
+                  )}
+                </Button>
+              </div>
+            </div>
+          </Card>
         )}
       </form>
     </div>

@@ -13,36 +13,37 @@ export default async function SettingsPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-6 sm:py-8">
       <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Settings</h1>
-        <p className="text-gray-600 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Settings</h1>
+        <p className="text-gray-400 mb-8">
           Manage your account settings and preferences
         </p>
 
         {/* Profile Settings */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-[#1a1a1a] border-[#333]">
           <CardHeader>
-            <CardTitle>Profile Information</CardTitle>
-            <CardDescription>Update your account profile details</CardDescription>
+            <CardTitle className="text-white">Profile Information</CardTitle>
+            <CardDescription className="text-gray-400">Update your account profile details</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
+              <Label htmlFor="name" className="text-gray-300">Name</Label>
               <Input
                 id="name"
                 defaultValue={session.user.name || ""}
                 placeholder="Your name"
+                className="bg-[#0f0f0f] border-[#333] text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email" className="text-gray-300">Email</Label>
               <Input
                 id="email"
                 type="email"
                 defaultValue={session.user.email || ""}
                 disabled
-                className="bg-gray-50"
+                className="bg-[#0f0f0f] border-[#333] text-gray-400"
               />
               <p className="text-sm text-gray-500">
                 Email cannot be changed
@@ -53,15 +54,15 @@ export default async function SettingsPage() {
         </Card>
 
         {/* Credits */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-[#1a1a1a] border-[#333]">
           <CardHeader>
-            <CardTitle>Credits</CardTitle>
-            <CardDescription>Your current credit balance</CardDescription>
+            <CardTitle className="text-white">Credits</CardTitle>
+            <CardDescription className="text-gray-400">Your current credit balance</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-3xl font-bold">{session.user.credits || 0}</p>
+                <p className="text-3xl font-bold text-white">{session.user.credits || 0}</p>
                 <p className="text-sm text-gray-500">Available Credits</p>
               </div>
               <Button variant="outline">Purchase Credits</Button>
@@ -70,28 +71,30 @@ export default async function SettingsPage() {
         </Card>
 
         {/* API Keys */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-[#1a1a1a] border-[#333]">
           <CardHeader>
-            <CardTitle>API Keys</CardTitle>
-            <CardDescription>Manage your AI provider API keys</CardDescription>
+            <CardTitle className="text-white">API Keys</CardTitle>
+            <CardDescription className="text-gray-400">Manage your AI provider API keys</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="deepseek">DeepSeek API Key</Label>
+              <Label htmlFor="deepseek" className="text-gray-300">DeepSeek API Key</Label>
               <Input
                 id="deepseek"
                 type="password"
                 placeholder="sk-..."
                 disabled
+                className="bg-[#0f0f0f] border-[#333] text-gray-400"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="openai">OpenAI API Key</Label>
+              <Label htmlFor="openai" className="text-gray-300">OpenAI API Key</Label>
               <Input
                 id="openai"
                 type="password"
                 placeholder="sk-..."
                 disabled
+                className="bg-[#0f0f0f] border-[#333] text-gray-400"
               />
             </div>
             <p className="text-sm text-gray-500">
@@ -101,24 +104,24 @@ export default async function SettingsPage() {
         </Card>
 
         {/* Preferences */}
-        <Card className="mb-6">
+        <Card className="mb-6 bg-[#1a1a1a] border-[#333]">
           <CardHeader>
-            <CardTitle>Preferences</CardTitle>
-            <CardDescription>Customize your experience</CardDescription>
+            <CardTitle className="text-white">Preferences</CardTitle>
+            <CardDescription className="text-gray-400">Customize your experience</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-medium">Email Notifications</p>
+                <p className="font-medium text-white">Email Notifications</p>
                 <p className="text-sm text-gray-500">Receive updates about your projects</p>
               </div>
               <Button variant="outline" size="sm" disabled>
                 Coming Soon
               </Button>
             </div>
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between gap-3">
               <div>
-                <p className="font-medium">Dark Mode</p>
+                <p className="font-medium text-white">Dark Mode</p>
                 <p className="text-sm text-gray-500">Switch to dark theme</p>
               </div>
               <Button variant="outline" size="sm" disabled>
@@ -129,10 +132,10 @@ export default async function SettingsPage() {
         </Card>
 
         {/* Danger Zone */}
-        <Card className="border-red-200">
+        <Card className="border-red-900 bg-[#1a1a1a]">
           <CardHeader>
-            <CardTitle className="text-red-600">Danger Zone</CardTitle>
-            <CardDescription>Irreversible actions</CardDescription>
+            <CardTitle className="text-red-500">Danger Zone</CardTitle>
+            <CardDescription className="text-gray-400">Irreversible actions</CardDescription>
           </CardHeader>
           <CardContent>
             <Button variant="destructive" disabled>

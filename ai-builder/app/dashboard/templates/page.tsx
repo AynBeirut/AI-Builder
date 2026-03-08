@@ -76,10 +76,10 @@ export default function TemplatesPage() {
   }
 
   const TemplateCard = ({ template, gradient }: { template: any; gradient: string }) => (
-    <div className={`border rounded-lg overflow-hidden hover:shadow-lg transition-shadow ${gradient}`}>
+    <div className={`border border-[#333] rounded-lg overflow-hidden hover:shadow-lg transition-shadow bg-[#1a1a1a]`}>
       {/* Preview Image */}
       <div 
-        className="h-48 bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center cursor-pointer relative group"
+        className="h-48 bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] flex items-center justify-center cursor-pointer relative group"
         onClick={() => setPreviewTemplate(template)}
       >
         <div className="text-6xl">{template.icon}</div>
@@ -92,8 +92,8 @@ export default function TemplatesPage() {
       
       {/* Content */}
       <div className="p-6">
-        <h3 className="text-xl font-semibold mb-2">{template.name}</h3>
-        <p className="text-gray-600 mb-4 text-sm">{template.description}</p>
+        <h3 className="text-xl font-semibold mb-2 text-white">{template.name}</h3>
+        <p className="text-gray-400 mb-4 text-sm">{template.description}</p>
         <Link
           href={`/dashboard/projects/new?template=${template.id}`}
           className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm font-medium transition-colors"
@@ -107,13 +107,13 @@ export default function TemplatesPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-2">Templates & Themes</h1>
-        <p className="text-gray-600 mb-8">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2 text-white">Templates & Themes</h1>
+        <p className="text-gray-400 mb-6 sm:mb-8">
           Browse and use pre-built templates for your projects
         </p>
 
         {/* Category Navigation */}
-        <div className="mb-8 border-b">
+        <div className="mb-8 border-b border-[#333]">
           <div className="flex space-x-1 overflow-x-auto">
             {categories.map((category) => (
               <button
@@ -122,7 +122,7 @@ export default function TemplatesPage() {
                 className={`px-6 py-3 text-sm font-medium whitespace-nowrap transition-colors border-b-2 ${
                   activeCategory === category.id
                     ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-600 hover:text-gray-900 hover:border-gray-300"
+                    : "border-transparent text-gray-400 hover:text-gray-200 hover:border-gray-600"
                 }`}
               >
                 <span className="mr-2">{category.icon}</span>
@@ -135,16 +135,16 @@ export default function TemplatesPage() {
         {/* E-Commerce Templates */}
         {(activeCategory === "all" || activeCategory === "ecommerce") && (
           <div className="mb-12">
-            <h2 className="text-2xl font-semibold mb-6 flex items-center">
+            <h2 className="text-2xl font-semibold mb-6 flex items-center text-white">
               <span className="text-3xl mr-2">🛒</span>
               E-Commerce Templates
             </h2>
-            <div className="grid md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {templates.ecommerce.map((template) => (
                 <TemplateCard 
                   key={template.id} 
                   template={template} 
-                  gradient="bg-gradient-to-br from-blue-50 to-white"
+                  gradient=""
                 />
               ))}
             </div>
@@ -154,16 +154,16 @@ export default function TemplatesPage() {
         {/* Business & Merchant Templates */}
         {(activeCategory === "all" || activeCategory === "business") && (
         <div className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 flex items-center">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center text-white">
             <span className="text-3xl mr-2">💼</span>
             Business & Merchant Templates
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {templates.business.map((template) => (
               <TemplateCard 
                 key={template.id} 
                 template={template} 
-                gradient="bg-gradient-to-br from-green-50 to-white"
+                gradient=""
               />
             ))}
           </div>
@@ -173,16 +173,16 @@ export default function TemplatesPage() {
         {/* General Templates */}
         {(activeCategory === "all" || activeCategory === "general") && (
         <div className="mb-12">
-          <h2 className="text-2xl font-semibold mb-6 flex items-center">
+          <h2 className="text-2xl font-semibold mb-6 flex items-center text-white">
             <span className="text-3xl mr-2">🚀</span>
             General Templates
           </h2>
-          <div className="grid md:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {templates.general.map((template) => (
               <TemplateCard 
                 key={template.id} 
                 template={template} 
-                gradient="bg-gradient-to-br from-purple-50 to-white"
+                gradient=""
               />
             ))}
           </div>
@@ -191,59 +191,59 @@ export default function TemplatesPage() {
 
         {/* Preview Modal */}
         {previewTemplate && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
-                <div className="flex items-center space-x-3">
+          <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4">
+            <div className="bg-[#1a1a1a] border border-[#333] rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-[#1a1a1a] border-b border-[#333] p-4 flex flex-wrap items-start sm:items-center justify-between gap-3">
+                <div className="flex items-start sm:items-center space-x-3">
                   <span className="text-4xl">{previewTemplate.icon}</span>
                   <div>
-                    <h3 className="text-2xl font-bold">{previewTemplate.name}</h3>
-                    <p className="text-gray-600">{previewTemplate.description}</p>
+                    <h3 className="text-2xl font-bold text-white">{previewTemplate.name}</h3>
+                    <p className="text-gray-400">{previewTemplate.description}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => setPreviewTemplate(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg"
+                  className="p-2 hover:bg-[#2a2a2a] rounded-lg"
                 >
-                  <X className="h-6 w-6" />
+                  <X className="h-6 w-6 text-gray-400" />
                 </button>
               </div>
               
               <div className="p-6">
                 {/* Preview Image Placeholder */}
-                <div className="bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg h-96 flex items-center justify-center mb-6">
+                <div className="bg-gradient-to-br from-[#2a2a2a] to-[#1a1a1a] rounded-lg h-96 flex items-center justify-center mb-6">
                   <div className="text-center">
                     <div className="text-8xl mb-4">{previewTemplate.icon}</div>
-                    <p className="text-gray-600">Template Preview</p>
+                    <p className="text-gray-400">Template Preview</p>
                     <p className="text-sm text-gray-500 mt-2">Full preview coming soon</p>
                   </div>
                 </div>
 
                 {/* Features */}
                 <div className="mb-6">
-                  <h4 className="text-lg font-semibold mb-3">Features</h4>
+                  <h4 className="text-lg font-semibold mb-3 text-white">Features</h4>
                   <ul className="grid grid-cols-2 gap-2">
-                    <li className="flex items-center text-sm">
+                    <li className="flex items-center text-sm text-gray-300">
                       <span className="text-green-500 mr-2">✓</span>
                       Responsive Design
                     </li>
-                    <li className="flex items-center text-sm">
+                    <li className="flex items-center text-sm text-gray-300">
                       <span className="text-green-500 mr-2">✓</span>
                       Modern UI
                     </li>
-                    <li className="flex items-center text-sm">
+                    <li className="flex items-center text-sm text-gray-300">
                       <span className="text-green-500 mr-2">✓</span>
                       SEO Optimized
                     </li>
-                    <li className="flex items-center text-sm">
+                    <li className="flex items-center text-sm text-gray-300">
                       <span className="text-green-500 mr-2">✓</span>
                       Fast Loading
                     </li>
-                    <li className="flex items-center text-sm">
+                    <li className="flex items-center text-sm text-gray-300">
                       <span className="text-green-500 mr-2">✓</span>
                       Cross-browser Compatible
                     </li>
-                    <li className="flex items-center text-sm">
+                    <li className="flex items-center text-sm text-gray-300">
                       <span className="text-green-500 mr-2">✓</span>
                       Easy to Customize
                     </li>
@@ -251,7 +251,7 @@ export default function TemplatesPage() {
                 </div>
 
                 {/* Actions */}
-                <div className="flex space-x-4">
+                <div className="flex flex-col sm:flex-row gap-3">
                   <Link
                     href={`/dashboard/projects/new?template=${previewTemplate.id}`}
                     className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-center font-medium"
@@ -260,7 +260,7 @@ export default function TemplatesPage() {
                   </Link>
                   <button
                     onClick={() => setPreviewTemplate(null)}
-                    className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50"
+                    className="px-6 py-3 border border-[#333] rounded-lg hover:bg-[#2a2a2a] text-gray-300"
                   >
                     Close
                   </button>

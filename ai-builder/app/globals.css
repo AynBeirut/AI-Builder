@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -119,7 +118,43 @@
   * {
     @apply border-border outline-ring/50;
   }
+  html,
+  body {
+    overflow-x: hidden;
+  }
   body {
     @apply bg-background text-foreground;
+  }
+  img,
+  video,
+  iframe,
+  canvas,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #2a313a #101317;
+  }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: #101317;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: #2a313a;
+    border-radius: 9999px;
+    border: 2px solid #101317;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: #333c47;
   }
 }

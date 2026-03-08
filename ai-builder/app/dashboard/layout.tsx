@@ -1,6 +1,6 @@
 import { auth } from "@/auth"
 import { redirect } from "next/navigation"
-import { DashboardNav } from "@/components/dashboard/nav"
+import { ConditionalNav } from "@/components/dashboard/conditional-nav"
 
 export default async function DashboardLayout({
   children,
@@ -14,8 +14,8 @@ export default async function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <DashboardNav user={session.user} />
+    <div className="min-h-screen bg-[#0f0f0f]">
+      <ConditionalNav user={session.user} />
       <main className="w-full">
         {children}
       </main>
