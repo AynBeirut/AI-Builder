@@ -1605,73 +1605,77 @@ export function AIChat({ projectId, onCodeGenerated, onLoadingChange, onFilesUpd
               aiMode === 'agent' ? "Describe what to build next..." :
               'Tell me about your project...'
             }
-            className={`w-full ${input.trim() ? 'min-h-[34px] max-h-28' : '!h-[34px] !min-h-[34px] !max-h-[34px]'} bg-transparent border-0 border-none shadow-none focus-visible:ring-0 text-white placeholder:text-slate-600 text-sm resize-none px-3 py-1`}
+            className={`w-full ${input.trim() ? 'min-h-[36px] max-h-24' : '!h-[36px] !min-h-[36px] !max-h-[36px]'} bg-transparent border-0 border-none shadow-none focus-visible:ring-0 text-white placeholder:text-slate-600 text-sm resize-none px-3 py-1.5`}
             disabled={isLoading}
           />
 
           {aiMode === 'planner' && (
-            <div className="px-3 pb-1 flex gap-1.5 overflow-x-auto whitespace-nowrap">
-              {(() => {
-                const base = ['Use existing brief and continue']
-                const grouped = plannerChecklist ? groupMissingChecklist(plannerChecklist.missing) : null
-                const dynamicPrompts: string[] = []
-                if (grouped?.business.length) dynamicPrompts.push('Let’s finish business goals and audience')
-                if (grouped?.pages.length) dynamicPrompts.push('Let’s finalize pages and section structure')
-                if (grouped?.assets.length) dynamicPrompts.push('Let’s define content/assets still missing')
-                if (grouped?.backend.length) dynamicPrompts.push('I need backend features (forms/newsletter/blog)')
-                if (grouped?.hosting.length) dynamicPrompts.push('Need hosting/domain/cloud setup guidance')
-                const prompts = [...base, ...dynamicPrompts].slice(0, 6)
-                return prompts.map((quick) => (
-                <button
-                  key={quick}
-                  type="button"
-                  onClick={() => sendMessage(quick, { overrideMode: 'planner' })}
-                  className="shrink-0 text-[9px] px-1.5 py-0.5 rounded-full border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                >
-                  {quick}
-                </button>
-                ))
-              })()}
+            <div className="px-2.5 pb-1.5">
+              <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md border border-white/10 bg-black/60 px-2 py-1.5">
+                {(() => {
+                  const base = ['Use existing brief and continue']
+                  const grouped = plannerChecklist ? groupMissingChecklist(plannerChecklist.missing) : null
+                  const dynamicPrompts: string[] = []
+                  if (grouped?.business.length) dynamicPrompts.push('Let’s finish business goals and audience')
+                  if (grouped?.pages.length) dynamicPrompts.push('Let’s finalize pages and section structure')
+                  if (grouped?.assets.length) dynamicPrompts.push('Let’s define content/assets still missing')
+                  if (grouped?.backend.length) dynamicPrompts.push('I need backend features (forms/newsletter/blog)')
+                  if (grouped?.hosting.length) dynamicPrompts.push('Need hosting/domain/cloud setup guidance')
+                  const prompts = [...base, ...dynamicPrompts].slice(0, 6)
+                  return prompts.map((quick) => (
+                  <button
+                    key={quick}
+                    type="button"
+                    onClick={() => sendMessage(quick, { overrideMode: 'planner' })}
+                    className="shrink-0 text-[10px] px-2.5 py-1 rounded-md border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    {quick}
+                  </button>
+                  ))
+                })()}
+              </div>
             </div>
           )}
 
           {aiMode === 'agent' && (
-            <div className="px-3 pb-1 flex flex-wrap gap-1.5">
-              <button
-                type="button"
-                onClick={() => setStyleLocks((previous) => ({ ...previous, colors: !previous.colors }))}
-                className={`text-[9px] px-1.5 py-0.5 rounded-full border transition-colors ${styleLocks.colors ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/10 text-slate-400 hover:text-white hover:bg-white/5'}`}
-              >
-                Lock colors
-              </button>
-              <button
-                type="button"
-                onClick={() => setStyleLocks((previous) => ({ ...previous, fonts: !previous.fonts }))}
-                className={`text-[9px] px-1.5 py-0.5 rounded-full border transition-colors ${styleLocks.fonts ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/10 text-slate-400 hover:text-white hover:bg-white/5'}`}
-              >
-                Lock fonts
-              </button>
-              <button
-                type="button"
-                onClick={() => setStyleLocks((previous) => ({ ...previous, layout: !previous.layout }))}
-                className={`text-[9px] px-1.5 py-0.5 rounded-full border transition-colors ${styleLocks.layout ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/10 text-slate-400 hover:text-white hover:bg-white/5'}`}
-              >
-                Lock layout
-              </button>
-              {[
-                'Try an alternative visual style while keeping the same structure.',
-                'Refine layout spacing and section hierarchy for better readability.',
-                'Keep style and structure, but improve the copy and CTA clarity.',
-              ].map((quick) => (
+            <div className="px-2.5 pb-1.5">
+              <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap rounded-md border border-white/10 bg-black/60 px-2 py-1.5">
                 <button
-                  key={quick}
                   type="button"
-                  onClick={() => sendMessage(quick, { overrideMode: 'agent' })}
-                  className="text-[9px] px-1.5 py-0.5 rounded-full border border-white/10 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  onClick={() => setStyleLocks((previous) => ({ ...previous, colors: !previous.colors }))}
+                  className={`shrink-0 text-[10px] px-2.5 py-1 rounded-md border transition-colors ${styleLocks.colors ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/15 text-slate-300 hover:text-white hover:bg-white/10'}`}
                 >
-                  {quick}
+                  Lock colors
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setStyleLocks((previous) => ({ ...previous, fonts: !previous.fonts }))}
+                  className={`shrink-0 text-[10px] px-2.5 py-1 rounded-md border transition-colors ${styleLocks.fonts ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/15 text-slate-300 hover:text-white hover:bg-white/10'}`}
+                >
+                  Lock fonts
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStyleLocks((previous) => ({ ...previous, layout: !previous.layout }))}
+                  className={`shrink-0 text-[10px] px-2.5 py-1 rounded-md border transition-colors ${styleLocks.layout ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/15 text-slate-300 hover:text-white hover:bg-white/10'}`}
+                >
+                  Lock layout
+                </button>
+                {[
+                  'Try an alternative visual style while keeping the same structure.',
+                  'Refine layout spacing and section hierarchy for better readability.',
+                  'Keep style and structure, but improve the copy and CTA clarity.',
+                ].map((quick) => (
+                  <button
+                    key={quick}
+                    type="button"
+                    onClick={() => sendMessage(quick, { overrideMode: 'agent' })}
+                    className="shrink-0 text-[10px] px-2.5 py-1 rounded-md border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                  >
+                    {quick}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
