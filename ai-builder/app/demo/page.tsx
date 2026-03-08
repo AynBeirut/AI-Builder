@@ -470,7 +470,7 @@ export default function DemoPage() {
                 srcDoc={generatePreviewHTML()}
                 className="w-full h-full"
                 title="Preview"
-                sandbox="allow-scripts"
+                sandbox="allow-scripts allow-same-origin"
               />
             </div>
           )}
