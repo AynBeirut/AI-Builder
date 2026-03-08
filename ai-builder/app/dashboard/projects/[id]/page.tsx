@@ -1848,7 +1848,7 @@ Output ONLY the complete HTML code, nothing else.`)
                     srcDoc={previewHtml}
                     className="w-full h-full border-0 bg-white"
                     title="Preview"
-                    sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                    sandbox="allow-scripts allow-forms allow-popups allow-modals"
                     onLoad={() => sendSelectModeToPreview(selectMode)}
                   />
                 ) : (
@@ -1863,7 +1863,7 @@ Output ONLY the complete HTML code, nothing else.`)
                       srcDoc={previewHtml}
                       className="w-full h-full border-0 bg-white"
                       title="Preview"
-                      sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-modals"
+                      sandbox="allow-scripts allow-forms allow-popups allow-modals"
                       onLoad={() => sendSelectModeToPreview(selectMode)}
                     />
                   </div>
