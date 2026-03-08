@@ -42,6 +42,16 @@ const nextConfig: NextConfig = {
           { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
         ]
       },
+      {
+        // Auth API — allow fetch from sandboxed iframe (origin: null)
+        source: '/api/auth/:path*',
+        headers: [
+          { key: 'Access-Control-Allow-Origin', value: '*' },
+          { key: 'Access-Control-Allow-Methods', value: 'GET, POST, OPTIONS' },
+          { key: 'Access-Control-Allow-Headers', value: 'Content-Type, Authorization' },
+          { key: 'Cross-Origin-Resource-Policy', value: 'cross-origin' },
+        ]
+      },
     ]
   }
 };
