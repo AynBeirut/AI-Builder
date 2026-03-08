@@ -1605,7 +1605,7 @@ export function AIChat({ projectId, onCodeGenerated, onLoadingChange, onFilesUpd
               aiMode === 'agent' ? "Describe what to build next..." :
               'Tell me about your project...'
             }
-            className={`w-full ${input.trim() ? 'min-h-[34px] max-h-[88px]' : '!h-[34px] !min-h-[34px] !max-h-[34px]'} bg-transparent border-0 border-none shadow-none focus-visible:ring-0 text-white placeholder:text-slate-600 text-sm resize-none px-3 py-1`}
+            className={`w-full ${input.trim() ? 'min-h-[40px] max-h-[104px]' : '!h-[40px] !min-h-[40px] !max-h-[40px]'} bg-transparent border-0 border-none shadow-none focus-visible:ring-0 text-white placeholder:text-slate-600 text-sm leading-5 resize-none px-3 py-2`}
             disabled={isLoading}
           />
 
@@ -1639,26 +1639,26 @@ export function AIChat({ projectId, onCodeGenerated, onLoadingChange, onFilesUpd
 
           {aiMode === 'agent' && (
             <div className="px-2.5 pb-1.5">
-              <div className="overflow-x-auto rounded-md border border-white/10 bg-black px-1.5 py-1 [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full">
-                <div className="flex min-w-max items-center gap-1.5 whitespace-nowrap">
+              <div className="overflow-x-auto rounded-lg border border-zinc-800 bg-black/95 px-2 py-2 [scrollbar-color:#3f3f46_#000] [scrollbar-width:thin] [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-black [&::-webkit-scrollbar-thumb]:bg-zinc-700 [&::-webkit-scrollbar-thumb]:rounded-full">
+                <div className="flex min-w-max items-center gap-2 whitespace-nowrap">
                   <button
                     type="button"
                     onClick={() => setStyleLocks((previous) => ({ ...previous, colors: !previous.colors }))}
-                    className={`shrink-0 text-[10px] px-2.5 py-1 rounded-md border transition-colors ${styleLocks.colors ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/15 text-slate-300 hover:text-white hover:bg-white/10'}`}
+                    className={`shrink-0 text-xs px-3 py-1.5 rounded-md border transition-colors ${styleLocks.colors ? 'border-white text-white bg-zinc-800' : 'border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-900'}`}
                   >
                     Lock colors
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyleLocks((previous) => ({ ...previous, fonts: !previous.fonts }))}
-                    className={`shrink-0 text-[10px] px-2.5 py-1 rounded-md border transition-colors ${styleLocks.fonts ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/15 text-slate-300 hover:text-white hover:bg-white/10'}`}
+                    className={`shrink-0 text-xs px-3 py-1.5 rounded-md border transition-colors ${styleLocks.fonts ? 'border-white text-white bg-zinc-800' : 'border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-900'}`}
                   >
                     Lock fonts
                   </button>
                   <button
                     type="button"
                     onClick={() => setStyleLocks((previous) => ({ ...previous, layout: !previous.layout }))}
-                    className={`shrink-0 text-[10px] px-2.5 py-1 rounded-md border transition-colors ${styleLocks.layout ? 'border-blue-400 text-blue-200 bg-blue-500/20' : 'border-white/15 text-slate-300 hover:text-white hover:bg-white/10'}`}
+                    className={`shrink-0 text-xs px-3 py-1.5 rounded-md border transition-colors ${styleLocks.layout ? 'border-white text-white bg-zinc-800' : 'border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-900'}`}
                   >
                     Lock layout
                   </button>
@@ -1671,7 +1671,7 @@ export function AIChat({ projectId, onCodeGenerated, onLoadingChange, onFilesUpd
                       key={quick}
                       type="button"
                       onClick={() => sendMessage(quick, { overrideMode: 'agent' })}
-                      className="shrink-0 text-[10px] px-2.5 py-1 rounded-md border border-white/15 text-slate-300 hover:text-white hover:bg-white/10 transition-colors"
+                      className="shrink-0 text-xs px-3 py-1.5 rounded-md border border-zinc-700 text-zinc-200 hover:text-white hover:bg-zinc-900 transition-colors"
                     >
                       {quick}
                     </button>
