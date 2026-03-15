@@ -636,17 +636,24 @@ Output ONLY the complete HTML code, nothing else.`)
       return `${raw}${selectBridgeScript}`
     }
 
+    const simpleNavScript = `<script>(function(){function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}function blocked(p){p=String(p||'').toLowerCase();return /^\/(auth|signin|dashboard|_next|api\/auth)(\/|$)/.test(p)}function stemFromHref(href){var h=String(href||'').trim();if(!h||/^(mailto:|tel:|javascript:)/i.test(h))return'';if(h.indexOf('#page-')===0)return norm(h.slice(6));if(h.indexOf('#')===0)return'';if(/^(https?:)?\/\//i.test(h)){try{var u=new URL(h,window.location.href);var host=String(u.hostname||'').toLowerCase();if(!(host===window.location.hostname||host==='ai.aynbeirut.dev'||/\.ai\.aynbeirut\.dev$/.test(host)))return'';if(blocked(u.pathname))return'';h=u.pathname||'/'}catch(_){return''}}var noQuery=h.split('?')[0].split('#')[0];if(/\.(png|jpe?g|gif|svg|webp|avif|ico|css|js|json|pdf|xml|txt|zip|woff2?|ttf|otf)$/i.test(noQuery))return'';var noExt=noQuery.replace(/\.html?$/i,'');var base=noExt.split('/').filter(Boolean).pop()||noExt;base=base.split('\\').pop()||base;return norm(base)}function switchTo(stem){if(!stem)return;if(typeof window.showPage==='function'){window.showPage(stem);return}if(typeof window.navigateTo==='function'){window.navigateTo(stem);return}if(typeof window.switchPage==='function'){window.switchPage(stem);return}var all=document.querySelectorAll('[id^="page-"],[class~="page-section"],[data-page-id]');all.forEach(function(s){s.style.display='none';s.classList&&s.classList.remove('active')});var ids=['page-'+stem,stem+'-page',stem+'-section','section-'+stem,stem,'page-'+norm(stem)];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el){el.style.display='block';el.classList&&el.classList.add('active');window.scrollTo(0,0);break}}document.querySelectorAll('[data-page]').forEach(function(a){a.classList&&a.classList.remove('active')});document.querySelectorAll('[data-page="'+stem+'"],[data-page="'+norm(stem)+'"]').forEach(function(a){a.classList&&a.classList.add('active')})}function rewrite(root){var scope=root&&root.querySelectorAll?root:document;if(!scope.querySelectorAll)return;scope.querySelectorAll('a[href]').forEach(function(a){var stem=stemFromHref(a.getAttribute('href')||'');if(!stem)return;a.setAttribute('href','#page-'+stem);if(!a.getAttribute('data-page'))a.setAttribute('data-page',stem)})}function onClick(e){var el=e.target&&e.target.closest?e.target.closest('[data-page],a[href]'):null;if(!el)return;var stem=el.getAttribute&&el.getAttribute('data-page')?norm(el.getAttribute('data-page')||''):stemFromHref(el.getAttribute('href')||'');if(!stem)return;e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();switchTo(stem)}window.addEventListener('click',onClick,true);document.addEventListener('click',onClick,true);window.addEventListener('submit',function(e){var form=e.target;if(!form||!form.getAttribute)return;var action=form.getAttribute('action')||'';if(!action||stemFromHref(action)){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation()}},true);rewrite(document);try{new MutationObserver(function(records){records.forEach(function(rec){rec.addedNodes&&rec.addedNodes.forEach&&rec.addedNodes.forEach(function(n){if(n&&n.nodeType===1)rewrite(n)})})}).observe(document.documentElement||document.body,{childList:true,subtree:true})}catch(_){}})()<\/script>`
+
+    const injectPreviewRuntime = (raw: string): string => {
+      if (/<\/body>/i.test(raw)) return raw.replace(/<\/body>/i, `${simpleNavScript}${selectBridgeScript}</body>`)
+      return `${raw}${simpleNavScript}${selectBridgeScript}`
+    }
+
     // Hard fallback: render raw project HTML directly.
     // The previous transform/injection pipeline has produced repeated srcdoc parser
     // corruption in production for certain generated pages.
     const rawLower = html.trim().toLowerCase()
     if (rawLower.startsWith('<!doctype') || rawLower.startsWith('<html')) {
-      return injectSelectBridge(html)
+      return injectPreviewRuntime(html)
     }
     const fallbackCss = files["style.css"] || ""
     const fallbackJs = files["script.js"] || ""
     const safeFallbackJs = fallbackJs.replace(/<\/script/gi, '<\\/script')
-    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>${fallbackCss}</style></head><body>${html}<script>${safeFallbackJs}</script>${selectBridgeScript}</body></html>`
+    return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>${fallbackCss}</style></head><body>${html}<script>${safeFallbackJs}<\/script>${simpleNavScript}${selectBridgeScript}</body></html>`
 
     // ── Sanitize </script> inside JS string literals ────────────────────────
     // AI models often write:  innerHTML = '</script>';  which makes the HTML
