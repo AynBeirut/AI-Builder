@@ -717,6 +717,12 @@ function normalizePageNames(value: unknown): string[] {
     return deduped
 }
 
+function inferContentStructure(value: unknown, pageNames: string[]): 'single-page' | 'multi-page' {
+    if (pageNames.length > 1) return 'multi-page'
+    const normalized = String(value ?? '').trim().toLowerCase()
+    return normalized === 'multi-page' ? 'multi-page' : 'single-page'
+}
+
 export async function POST(request: Request) {
   try {
     const session = await auth()
@@ -799,6 +805,7 @@ export async function POST(request: Request) {
         const canonicalNavType = navType || navigationStyle || 'top-nav'
     const normalizedPageNames = normalizePageNames(pageNames)
     const normalizedPageNamesCsv = normalizedPageNames.join(',')
+    const canonicalContentStructure = inferContentStructure(contentStructure, normalizedPageNames)
         const enhancedData = {
             template,
             designStyle,
@@ -808,7 +815,7 @@ export async function POST(request: Request) {
             fontFamily,
             navigationStyle: canonicalNavType,
             heroLayout,
-            contentStructure,
+            contentStructure: canonicalContentStructure,
             footerStyle,
             mobileLayout,
             category,

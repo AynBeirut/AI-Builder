@@ -41,6 +41,12 @@ function normalizePageNames(value: unknown): string[] {
   return deduped
 }
 
+function inferContentStructure(value: unknown, pageNames: string[]): 'single-page' | 'multi-page' {
+  if (pageNames.length > 1) return 'multi-page'
+  const normalized = String(value ?? '').trim().toLowerCase()
+  return normalized === 'multi-page' ? 'multi-page' : 'single-page'
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -230,6 +236,7 @@ export async function PATCH(
     const normalizedPageNames = normalizePageNames(updatedMeta.pageNames)
     updatedMeta.pageNames = normalizedPageNames.join(',')
     updatedMeta.numberOfPages = String(normalizedPageNames.length)
+    updatedMeta.contentStructure = inferContentStructure(updatedMeta.contentStructure, normalizedPageNames)
 
     // Merge incoming files with existing files, then regenerate project.md
     const existingFiles: Record<string, string> = JSON.parse(existingProject.files || '{}')

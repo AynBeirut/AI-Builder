@@ -6,6 +6,22 @@ export interface WizardTemplate {
   sections: string[]
 }
 
+export const CUSTOM_TEMPLATE: WizardTemplate = {
+  id: 'custom-builder',
+  name: 'Build Your Own Template',
+  icon: '🧩',
+  description: 'Start from a flexible layout, then shape every row yourself in Stage Builder.',
+  sections: ['Nav', 'Hero Banner', 'Features', 'Pricing Plans', 'Contact', 'Footer'],
+}
+
+export const FOOTER_STYLE_OPTIONS = [
+  { id: 'minimal', label: 'Minimal', desc: 'Small clean footer with essentials only' },
+  { id: 'comprehensive', label: 'Comprehensive', desc: 'Full footer with links, contact, and brand details' },
+  { id: 'centered', label: 'Centered', desc: 'Centered brand and links with a balanced layout' },
+  { id: 'columns', label: 'Multi-Column', desc: 'Structured footer with grouped sections and navigation' },
+  { id: 'visual', label: 'Visual', desc: 'Footer with stronger background, contrast, and branding' },
+]
+
 type SectionSize = 's' | 'm' | 'l'
 
 type TemplateLayoutResult = {

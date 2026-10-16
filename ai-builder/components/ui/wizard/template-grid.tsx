@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { buildTemplateLayout, getSectionColor } from "@/lib/wizard-config"
+import { CUSTOM_TEMPLATE, buildTemplateLayout } from "@/lib/wizard-config"
 
 interface TemplateItem {
   id: string
@@ -39,20 +39,40 @@ function TemplateDivisionPreview({ sections }: { sections: string[] }) {
     })
   }, [layout.pageLayouts, layout.pageSectionSizes])
 
+  const getRowHeightClass = (rowWeight: number): string => {
+    if (rowWeight >= 3) return "flex-[3] min-h-14"
+    if (rowWeight === 2) return "flex-[2] min-h-10"
+    return "flex-1 min-h-6"
+  }
+
+  const getSectionToneClass = (sectionName: string): string => {
+    const name = sectionName.toLowerCase()
+    if (name.includes("nav")) return "bg-slate-600"
+    if (name.includes("footer")) return "bg-slate-800"
+    if (name.includes("hero") || name.includes("banner") || name.includes("header")) return "bg-blue-600"
+    if (name.includes("product") || name.includes("catalog") || name.includes("listing") || name.includes("collection") || name.includes("lookbook")) return "bg-violet-600"
+    if (name.includes("gallery") || name.includes("portfolio") || name.includes("photo")) return "bg-pink-600"
+    if (name.includes("service") || name.includes("feature") || name.includes("class") || name.includes("menu") || name.includes("amenity")) return "bg-indigo-600"
+    if (name.includes("about") || name.includes("story") || name.includes("mission") || name.includes("team") || name.includes("staff") || name.includes("doctor") || name.includes("agent")) return "bg-teal-600"
+    if (name.includes("contact") || name.includes("booking") || name.includes("reserve") || name.includes("rsvp") || name.includes("enroll") || name.includes("register") || name.includes("subscribe") || name.includes("quote")) return "bg-green-600"
+    if (name.includes("review") || name.includes("testimonial")) return "bg-amber-600"
+    if (name.includes("price") || name.includes("plan") || name.includes("package") || name.includes("tier")) return "bg-orange-600"
+    if (name.includes("search")) return "bg-cyan-600"
+    return "bg-gray-500"
+  }
+
   return (
     <div className="absolute inset-0 p-2 bg-slate-50">
       <div className="space-y-1 h-full flex flex-col">
         {rows.map((row, rowIndex) => (
           <div
             key={`row-${rowIndex}`}
-            className={`grid gap-1 ${row.ids.length === 1 ? "grid-cols-1" : row.ids.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
-            style={{ flexGrow: row.rowWeight, minHeight: 14 }}
+            className={`grid gap-1 ${row.ids.length === 1 ? "grid-cols-1" : row.ids.length === 2 ? "grid-cols-2" : "grid-cols-3"} ${getRowHeightClass(row.rowWeight)}`}
           >
             {row.ids.map((section, index) => (
               <div
                 key={`section-${rowIndex}-${index}`}
-                className="rounded-sm border border-white/70"
-                style={{ background: getSectionColor(section) }}
+                className={`rounded-sm border border-white/70 ${getSectionToneClass(section)}`}
                 title={section}
               />
             ))}
@@ -81,7 +101,8 @@ export function TemplateGrid({
 
   const activeCategory = selectedCategory || categories[0] || ""
   const list = useMemo(() => {
-    return activeCategory ? templatesByCategory[activeCategory] || [] : []
+    const base = activeCategory ? templatesByCategory[activeCategory] || [] : []
+    return [CUSTOM_TEMPLATE, ...base]
   }, [activeCategory, templatesByCategory])
 
   const featuredOrder = useMemo(() => list.map((template) => template.id), [list])
@@ -143,6 +164,8 @@ export function TemplateGrid({
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value as "featured" | "name-asc" | "name-desc")}
+              title="Sort templates"
+              aria-label="Sort templates"
               className="rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-500"
             >
               <option value="featured">Featured</option>
@@ -268,7 +291,7 @@ export function TemplateGrid({
                 <div className="space-y-1.5">
                   {(selectedTemplateDef.sections || ["Nav", "Hero", "Content", "Footer"]).map((section, index) => (
                     <div key={`${selectedTemplateDef.id}-${index}`} className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-sm" style={{ background: getSectionColor(section) }} />
+                      <div className={`w-2.5 h-2.5 rounded-sm ${section.toLowerCase().includes("footer") ? "bg-slate-800" : section.toLowerCase().includes("nav") ? "bg-slate-600" : section.toLowerCase().includes("hero") || section.toLowerCase().includes("banner") || section.toLowerCase().includes("header") ? "bg-blue-600" : section.toLowerCase().includes("price") || section.toLowerCase().includes("plan") ? "bg-orange-600" : section.toLowerCase().includes("gallery") || section.toLowerCase().includes("portfolio") ? "bg-pink-600" : section.toLowerCase().includes("contact") || section.toLowerCase().includes("booking") ? "bg-green-600" : section.toLowerCase().includes("feature") || section.toLowerCase().includes("service") ? "bg-indigo-600" : "bg-gray-500"}`} />
                       <span className="text-xs font-medium text-gray-700">{section}</span>
                     </div>
                   ))}

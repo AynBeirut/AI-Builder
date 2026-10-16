@@ -22,6 +22,13 @@ const toStringArray = (value: unknown): string[] => {
   return []
 }
 
+const toPageSlug = (value: string): string => value
+  .toLowerCase()
+  .trim()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/-+/g, '-')
+  .replace(/^-|-$/g, '') || 'home'
+
 export function generateProjectMd(name: string, meta: MetaRecord): string {
   const lines: string[] = []
   const hasText = (v: unknown): boolean => str(v).trim().length > 0
@@ -64,6 +71,26 @@ export function generateProjectMd(name: string, meta: MetaRecord): string {
   }
   lines.push('')
 
+  const pageNames = toStringArray(meta.pageNames)
+  const inferredContentStructure = pageNames.length > 1
+    ? 'multi-page'
+    : (str(meta.contentStructure).trim() || 'single-page')
+
+  lines.push('## Build Architecture')
+  lines.push(`- **Content Structure:** ${inferredContentStructure}`)
+  if (pageNames.length > 1) {
+    lines.push('- **Build Rule:** MUST build a multi-page experience inside ONE HTML file. Do NOT collapse all content into one long scrolling page.')
+    lines.push('- **Navigation Rule:** Every page below MUST have a matching nav link using `data-page="slug"` and a matching section with id `page-slug`.')
+    lines.push('- **Required Page Targets:**')
+    for (const page of pageNames) {
+      const slug = toPageSlug(page === 'Home' ? 'home' : page)
+      lines.push(`  - ${page} → data-page="${slug}" → id="page-${slug}"`)
+    }
+  } else {
+    lines.push('- **Build Rule:** Build as a single-page website unless the user explicitly adds more pages later.')
+  }
+  lines.push('')
+
   // ── Company Info ──────────────────────────────────────────────────────────
   lines.push('## Company Info')
   if (meta.mission) lines.push(`- **Mission:** ${str(meta.mission)}`)
@@ -95,6 +122,10 @@ export function generateProjectMd(name: string, meta: MetaRecord): string {
   const hasOptions =
     meta.navType ||
     meta.navigationStyle ||
+    meta.heroLayout ||
+    meta.footerStyle ||
+    meta.mobileLayout ||
+    meta.contentStructure ||
     meta.extras ||
     meta.carouselCount ||
     meta.galleryCount
@@ -104,6 +135,10 @@ export function generateProjectMd(name: string, meta: MetaRecord): string {
     if (canonicalNavType) {
       lines.push(`- **Navigation Style:** ${canonicalNavType}`)
     }
+    if (meta.heroLayout) lines.push(`- **Hero Layout:** ${str(meta.heroLayout)}`)
+    if (meta.footerStyle) lines.push(`- **Footer Style:** ${str(meta.footerStyle)}`)
+    if (meta.mobileLayout) lines.push(`- **Mobile Layout:** ${str(meta.mobileLayout)}`)
+    if (meta.contentStructure) lines.push(`- **Content Structure Preference:** ${str(meta.contentStructure)}`)
     if (meta.extras) {
       const ex = Array.isArray(meta.extras) ? (meta.extras as string[]).join(', ') : str(meta.extras)
       if (ex) lines.push(`- **Extra Components:** ${ex}`)
@@ -140,7 +175,6 @@ export function generateProjectMd(name: string, meta: MetaRecord): string {
     const pageSectionSizes = (meta.pageSectionSizes as Record<string, unknown>) || {}
     const pageCarousel = (meta.pageCarousel as Record<string, unknown>) || {}
     const pageGallery = (meta.pageGallery as Record<string, unknown>) || {}
-    const pageNames = toStringArray(meta.pageNames)
     const layoutPages = Object.keys(pageLayouts)
     const sizePages = Object.keys(pageSectionSizes)
     const pages = Array.from(new Set([...pageNames, ...layoutPages, ...sizePages]))
@@ -280,6 +314,20 @@ export function generateProjectMd(name: string, meta: MetaRecord): string {
     hasText(meta.description) ||
     hasText(meta.aboutUs)
 
+  const hasDifferentiationSignal =
+    hasText(meta.uniqueValue) ||
+    hasText(meta.tagline) ||
+    hasText(meta.mission) ||
+    hasText(meta.vision) ||
+    hasText(meta.servicesDescription)
+
+  const hasVisualDirectionSignal =
+    hasText(meta.designStyle) ||
+    hasText(meta.template) ||
+    hasText(meta.heroLayout) ||
+    hasText(meta.fontFamily) ||
+    toStringArray(meta.brandColors).length > 0
+
   const hasGoalSignal =
     hasText(meta.primaryGoal) ||
     hasText(meta.callToAction) ||
@@ -289,10 +337,12 @@ export function generateProjectMd(name: string, meta: MetaRecord): string {
   const checklist: Array<{ label: string; known: boolean }> = [
     { label: 'Brand name', known: hasText(meta.brandName) || hasText(name) },
     { label: 'Target audience', known: hasAudienceSignal },
+    { label: 'Unique value / what makes the business special', known: hasDifferentiationSignal },
     { label: 'Primary conversion goal / CTA', known: hasGoalSignal },
     { label: 'Page list', known: toStringArray(meta.pageNames).length > 0 || hasText(meta.numberOfPages) || hasPageLayoutData },
     { label: 'Core content blocks', known: toStringArray(meta.contentSections).length > 0 || toStringArray(meta.templateSections).length > 0 || hasPageLayoutData },
     { label: 'Color palette', known: hasText(meta.primaryColor) || toStringArray(meta.brandColors).length > 0 },
+    { label: 'Visual direction / premium design feel', known: hasVisualDirectionSignal },
     { label: 'Typography preference', known: hasText(meta.fontFamily) },
     { label: 'Feature priorities', known: toStringArray(meta.specialFeatures).length > 0 || toStringArray(meta.extras).length > 0 },
     { label: 'Proof assets (testimonials / portfolio / logos)', known: hasText(meta.testimonials) || hasText(meta.portfolio) || hasText(meta.caseStudies) || hasImageAssets },

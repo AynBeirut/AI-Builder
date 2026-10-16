@@ -393,12 +393,30 @@ export default function ProjectEditorPage() {
           const sections = (fullData.contentSections || fullData.selectedSections || []) as string[]
           const sectionPageMap = (fullData.sectionPageMap || {}) as Record<string, string[]>
           const pageLayouts = (fullData.pageLayouts || {}) as Record<string, string[]>
+          const describeLayoutToken = (token: string) => {
+            if (!token) return ''
+            const prettify = (value: string) => value
+              .replace(/^row:/, '')
+              .split('|')
+              .filter(Boolean)
+              .map((part) => part.replace(/[-_]+/g, ' ').replace(/\b\w/g, (char) => char.toUpperCase()))
+
+            if (token.startsWith('row:')) {
+              return `[${prettify(token).join(' + ')}]`
+            }
+
+            return prettify(token)[0] || token
+          }
+          const pageContracts = pages.map((pg: string) => {
+            const slug = pg.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'home'
+            return `• ${pg} → data-page="${slug}" → id="page-${slug}"`
+          }).join('\n')
 
           // Build per-page section descriptions
           const pageDetails = pages.map((pg: string) => {
             const layout = pageLayouts[pg]
             if (layout && layout.length > 0) {
-              return `• ${pg}: sections in order — ${layout.join(' → ')}`
+              return `• ${pg}: rows in order — ${layout.map(describeLayoutToken).filter(Boolean).join(' → ')}`
             }
             // Fall back to sectionPageMap
             const pageSections = sections.filter(s => {
@@ -438,10 +456,25 @@ Extra Components: ${extras.join(', ') || 'none'}
 === PAGES & THEIR SECTIONS ===
 ${pageDetails}
 
+=== REQUIRED PAGE CONTRACT ===
+- This project has ${pages.length} page(s): ${pages.join(', ')}
+- You MUST build every page listed above.
+- Do NOT collapse them into one long scrolling page.
+${pageContracts}
+
+=== AI BUILDER CREATIVE DIRECTION ===
+- The wizard settings are mandatory constraints, not a reason to make the design stiff or literal.
+- Understand the business first, then design a polished, modern website around it.
+- Keep the user's exact pages, structure intent, colors, and selected options.
+- Improve the result with premium spacing, better hierarchy, stronger typography, cleaner section composition, better CTA placement, and a more professional visual flow.
+- Do NOT produce an ugly/basic template look just because the user input is short or informal.
+- Rewrite rough raw text into polished website copy. Keep the meaning, but improve headlines, section copy, benefits, button labels, and calls to action.
+- If information is thin, infer a stronger value proposition and cleaner content structure from the business type instead of leaving the page generic.
+
 === TECHNICAL REQUIREMENTS ===
 1. Output ONE complete HTML file using Tailwind CSS via CDN.
-2. For EACH page, create a <div id="page-PAGENAME"> section. Show only first page on load; others hidden.
-3. Add a nav bar with links to ALL pages using pure JS show/hide (no frameworks).
+2. For EACH required page contract above, create a matching <section id="page-slug" class="page-section"> block. Show only first page on load; others hidden.
+3. Add a nav bar with links to ALL pages using `class="nav-link"` and the exact `data-page` values above. Use pure JS `showPage(id)` show/hide navigation.
 4. For each page, include its sections in the ORDER listed above.
 5. Use the primary color and design style throughout — apply real CSS classes, not placeholder colors.
 6. Include ALL requested extra components (carousel uses real images from https://picsum.photos).
@@ -636,7 +669,7 @@ Output ONLY the complete HTML code, nothing else.`)
       return `${raw}${selectBridgeScript}`
     }
 
-    const simpleNavScript = `<script>(function(){function norm(s){return String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}function blocked(p){p=String(p||'').toLowerCase();return /^\/(auth|signin|dashboard|_next|api\/auth)(\/|$)/.test(p)}function stemFromHref(href){var h=String(href||'').trim();if(!h||/^(mailto:|tel:|javascript:)/i.test(h))return'';if(h.indexOf('#page-')===0)return norm(h.slice(6));if(h.indexOf('#')===0)return'';if(/^(https?:)?\/\//i.test(h)){try{var u=new URL(h,window.location.href);var host=String(u.hostname||'').toLowerCase();if(!(host===window.location.hostname||host==='ai.aynbeirut.dev'||/\.ai\.aynbeirut\.dev$/.test(host)))return'';if(blocked(u.pathname))return'';h=u.pathname||'/'}catch(_){return''}}var noQuery=h.split('?')[0].split('#')[0];if(/\.(png|jpe?g|gif|svg|webp|avif|ico|css|js|json|pdf|xml|txt|zip|woff2?|ttf|otf)$/i.test(noQuery))return'';var noExt=noQuery.replace(/\.html?$/i,'');var base=noExt.split('/').filter(Boolean).pop()||noExt;base=base.split('\\').pop()||base;return norm(base)}function switchTo(stem){if(!stem)return;if(typeof window.showPage==='function'){window.showPage(stem);return}if(typeof window.navigateTo==='function'){window.navigateTo(stem);return}if(typeof window.switchPage==='function'){window.switchPage(stem);return}var all=document.querySelectorAll('[id^="page-"],[class~="page-section"],[data-page-id]');all.forEach(function(s){s.style.display='none';s.classList&&s.classList.remove('active')});var ids=['page-'+stem,stem+'-page',stem+'-section','section-'+stem,stem,'page-'+norm(stem)];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el){el.style.display='block';el.classList&&el.classList.add('active');window.scrollTo(0,0);break}}document.querySelectorAll('[data-page]').forEach(function(a){a.classList&&a.classList.remove('active')});document.querySelectorAll('[data-page="'+stem+'"],[data-page="'+norm(stem)+'"]').forEach(function(a){a.classList&&a.classList.add('active')})}function rewrite(root){var scope=root&&root.querySelectorAll?root:document;if(!scope.querySelectorAll)return;scope.querySelectorAll('a[href]').forEach(function(a){var stem=stemFromHref(a.getAttribute('href')||'');if(!stem)return;a.setAttribute('href','#page-'+stem);if(!a.getAttribute('data-page'))a.setAttribute('data-page',stem)})}function onClick(e){var el=e.target&&e.target.closest?e.target.closest('[data-page],a[href]'):null;if(!el)return;var stem=el.getAttribute&&el.getAttribute('data-page')?norm(el.getAttribute('data-page')||''):stemFromHref(el.getAttribute('href')||'');if(!stem)return;e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation();switchTo(stem)}window.addEventListener('click',onClick,true);document.addEventListener('click',onClick,true);window.addEventListener('submit',function(e){var form=e.target;if(!form||!form.getAttribute)return;var action=form.getAttribute('action')||'';if(!action||stemFromHref(action)){e.preventDefault();e.stopPropagation();if(e.stopImmediatePropagation)e.stopImmediatePropagation()}},true);rewrite(document);try{new MutationObserver(function(records){records.forEach(function(rec){rec.addedNodes&&rec.addedNodes.forEach&&rec.addedNodes.forEach(function(n){if(n&&n.nodeType===1)rewrite(n)})})}).observe(document.documentElement||document.body,{childList:true,subtree:true})}catch(_){}})()<\/script>`
+    const simpleNavScript = `<script>(function(){function norm(s){return(s||'').toLowerCase().replace(/[^a-z0-9]/g,'')}function switchTo(stem){if(!stem)return;if(typeof window.showPage==='function'){window.showPage(stem);return}if(typeof window.navigateTo==='function'){window.navigateTo(stem);return}if(typeof window.switchPage==='function'){window.switchPage(stem);return}var all=document.querySelectorAll('[id^="page-"],[class~="page-section"],[data-page-id]');all.forEach(function(s){s.style.display='none';s.classList&&s.classList.remove('active')});var ids=['page-'+stem,stem+'-page',stem+'-section','section-'+stem,stem,'page-'+norm(stem)];for(var i=0;i<ids.length;i++){var el=document.getElementById(ids[i]);if(el){el.style.display='block';el.classList&&el.classList.add('active');window.scrollTo(0,0);break}}document.querySelectorAll('[data-page]').forEach(function(a){a.classList&&a.classList.remove('active')});document.querySelectorAll('[data-page="'+stem+'"],[data-page="'+norm(stem)+'"]').forEach(function(a){a.classList&&a.classList.add('active')})}function stemFromHref(href){var h=(href||'').trim();if(!h)return'';if(/^(https?:)?\/\//i.test(h))return'';if(/^(mailto:|tel:|javascript:)/i.test(h))return'';if(h.indexOf('#page-')===0)return norm(h.slice(6));if(h.indexOf('#')===0)return'';var noQuery=h.split('?')[0].split('#')[0];if(/\.(png|jpe?g|gif|svg|webp|avif|ico|css|js|json|pdf|xml|txt|zip|woff2?|ttf|otf)$/i.test(noQuery))return'';var noExt=noQuery.replace(/\.html?$/i,'');var base=noExt.split('/').filter(Boolean).pop()||noExt;base=base.split('\\').pop()||base;return norm(base)}function install(){document.querySelectorAll('[data-page]').forEach(function(el){el.addEventListener('click',function(e){e.preventDefault();switchTo(norm(el.getAttribute('data-page')||''))})});document.querySelectorAll('a[href]').forEach(function(a){var stem=stemFromHref(a.getAttribute('href')||'');if(!stem)return;a.addEventListener('click',function(e){e.preventDefault();switchTo(stem)})})}if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',install,{once:true})}else{install()}})()<\/script>`
 
     const injectPreviewRuntime = (raw: string): string => {
       if (/<\/body>/i.test(raw)) return raw.replace(/<\/body>/i, `${simpleNavScript}${selectBridgeScript}</body>`)

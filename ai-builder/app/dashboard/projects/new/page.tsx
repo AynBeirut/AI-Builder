@@ -16,9 +16,12 @@ import { CategorySelector } from "@/components/ui/wizard/category-selector"
 import { TemplateGrid } from "@/components/ui/wizard/template-grid"
 import { StageBuilder } from "@/components/ui/wizard/stage-builder"
 import { StageAssets } from "@/components/ui/wizard/stage-assets"
-import { NavStyleSelector } from "@/components/ui/wizard/nav-style-selector"
-import { BASE_ASSET_ZONES, WEBSITE_TEMPLATES, buildTemplateLayout } from "@/lib/wizard-config"
-import { FONT_OPTIONS, getFontLabel, getFontCssFamily, FONT_PREVIEW_STYLESHEET_URL } from "@/lib/font-options"
+import { FooterStyleSelector } from "@/components/ui/wizard/footer-style-selector"
+import { FooterPreview } from "@/components/ui/wizard/footer-style-selector"
+import { NavPreview, NavStyleSelector } from "@/components/ui/wizard/nav-style-selector"
+import { SiteMapPreview } from "@/components/ui/wizard/site-map-preview"
+import { BASE_ASSET_ZONES, CUSTOM_TEMPLATE, FOOTER_STYLE_OPTIONS, WEBSITE_TEMPLATES, buildTemplateLayout } from "@/lib/wizard-config"
+import { FONT_OPTIONS, getFontLabel } from "@/lib/font-options"
 
 export default function NewProjectPage() {
   const router = useRouter()
@@ -84,17 +87,12 @@ export default function NewProjectPage() {
     mobileLayout: "mobile-first"
   })
 
-  useEffect(() => {
-    const id = "font-preview-stylesheet"
-    if (document.getElementById(id)) return
-    const link = document.createElement("link")
-    link.id = id
-    link.rel = "stylesheet"
-    link.href = FONT_PREVIEW_STYLESHEET_URL
-    document.head.appendChild(link)
-  }, [])
-
   const templates = WEBSITE_TEMPLATES
+  const allTemplates = [...Object.values(templates).flat(), CUSTOM_TEMPLATE]
+
+  const getTemplateLabel = (templateId: string): string => {
+    return allTemplates.find((template) => template.id === templateId)?.name || 'Custom Template'
+  }
 
   const resizeImage = (dataUrl: string, maxW = 600): Promise<string> => {
     return new Promise((resolve) => {
@@ -142,7 +140,7 @@ export default function NewProjectPage() {
   }
 
   const handleTemplateSelect = (templateId: string) => {
-    const selectedTemplateDef = Object.values(templates).flat().find((template) => template.id === templateId)
+    const selectedTemplateDef = allTemplates.find((template) => template.id === templateId)
     const generatedLayout = buildTemplateLayout(selectedTemplateDef?.sections || [])
 
     setSelectedTemplate(templateId)
@@ -159,7 +157,7 @@ export default function NewProjectPage() {
     if (currentStep !== 5) return
     if (!selectedTemplate) return
 
-    const selectedTemplateDef = Object.values(templates).flat().find((template) => template.id === selectedTemplate)
+    const selectedTemplateDef = allTemplates.find((template) => template.id === selectedTemplate)
     if (!selectedTemplateDef) return
 
     const generatedLayout = buildTemplateLayout(selectedTemplateDef.sections || [])
@@ -383,7 +381,7 @@ export default function NewProjectPage() {
     setLoading(true)
 
     try {
-      const selectedTemplateDef = Object.values(templates).flat().find(t => t.id === selectedTemplate)
+      const selectedTemplateDef = allTemplates.find(t => t.id === selectedTemplate)
 
       // Build carousel/gallery image lists from pageImages
       const projectData = {
@@ -762,6 +760,8 @@ export default function NewProjectPage() {
                         type="text"
                         value={color}
                         maxLength={7}
+                        title={ci === 0 ? 'Primary color hex' : `Color ${ci + 1} hex`}
+                        placeholder="#0056b3"
                         onChange={e => setFormData(prev => {
                           const c = [...prev.brandColors]; c[ci] = e.target.value
                           return { ...prev, brandColors: c, ...(ci === 0 ? { primaryColor: e.target.value } : {}) }
@@ -1203,7 +1203,7 @@ export default function NewProjectPage() {
                 {selectedTemplate && (
                   <span className="hidden sm:block text-sm text-gray-600">
                     Template selected: <span className="font-semibold text-blue-600">
-                      {Object.values(templates).flat().find(t => t.id === selectedTemplate)?.name}
+                      {getTemplateLabel(selectedTemplate)}
                     </span>
                   </span>
                 )}
@@ -1255,41 +1255,31 @@ export default function NewProjectPage() {
                   <SelectGroup>
                     <SelectLabel>AI</SelectLabel>
                     {FONT_OPTIONS.filter((font) => font.category === "AI").map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
-                      </SelectItem>
+                      <SelectItem key={font.id} value={font.id}>{font.label}</SelectItem>
                     ))}
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>Sans Serif</SelectLabel>
                     {FONT_OPTIONS.filter((font) => font.category === "Sans").map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
-                      </SelectItem>
+                      <SelectItem key={font.id} value={font.id}>{font.label}</SelectItem>
                     ))}
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>Serif</SelectLabel>
                     {FONT_OPTIONS.filter((font) => font.category === "Serif").map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
-                      </SelectItem>
+                      <SelectItem key={font.id} value={font.id}>{font.label}</SelectItem>
                     ))}
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>Display</SelectLabel>
                     {FONT_OPTIONS.filter((font) => font.category === "Display").map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
-                      </SelectItem>
+                      <SelectItem key={font.id} value={font.id}>{font.label}</SelectItem>
                     ))}
                   </SelectGroup>
                   <SelectGroup>
                     <SelectLabel>Monospace</SelectLabel>
                     {FONT_OPTIONS.filter((font) => font.category === "Mono").map((font) => (
-                      <SelectItem key={font.id} value={font.id}>
-                        <span style={{ fontFamily: getFontCssFamily(font.id) }}>{font.label}</span>
-                      </SelectItem>
+                      <SelectItem key={font.id} value={font.id}>{font.label}</SelectItem>
                     ))}
                   </SelectGroup>
                 </SelectContent>
@@ -1330,6 +1320,11 @@ export default function NewProjectPage() {
 
             <NavStyleSelector selectedNavType={selectedNavType} onChange={setSelectedNavType} />
 
+            <FooterStyleSelector
+              selectedFooterStyle={formData.footerStyle}
+              onChange={(value) => setFormData((previous) => ({ ...previous, footerStyle: value }))}
+            />
+
             <div className="mt-6 pt-6 border-t">
               <label className="block text-sm font-semibold text-gray-700 mb-2">Number of Pages</label>
               <div className="flex items-center gap-2 flex-wrap">
@@ -1344,6 +1339,8 @@ export default function NewProjectPage() {
                   type="number"
                   min={1}
                   value={pageNamesArray.length}
+                  title="Number of pages"
+                  aria-label="Number of pages"
                   onChange={(event) => {
                     const parsed = Number(event.target.value)
                     if (!Number.isFinite(parsed)) return
@@ -1490,6 +1487,10 @@ export default function NewProjectPage() {
                   <div className="font-medium text-blue-900">{selectedNavType}</div>
                 </div>
                 <div>
+                  <span className="text-blue-700">Footer:</span>
+                  <div className="font-medium text-blue-900">{FOOTER_STYLE_OPTIONS.find((option) => option.id === formData.footerStyle)?.label || formData.footerStyle}</div>
+                </div>
+                <div>
                   <span className="text-blue-700">Pages:</span>
                   <div className="font-medium text-blue-900">{pageNamesArray.length}</div>
                 </div>
@@ -1612,7 +1613,7 @@ export default function NewProjectPage() {
                     <div className="flex justify-between">
                       <span className="text-blue-700">Template:</span>
                       <span className="font-medium text-blue-900">
-                        {Object.values(templates).flat().find(t => t.id === selectedTemplate)?.name}
+                        {getTemplateLabel(selectedTemplate)}
                       </span>
                     </div>
                     <div className="flex justify-between">
@@ -1683,6 +1684,16 @@ export default function NewProjectPage() {
                         {homeLayoutRows.length ? homeLayoutRows.join(' → ') : 'Default template layout'}
                       </div>
                     </div>
+                    <div className="pt-2 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="rounded-xl border border-purple-200 bg-white p-2">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-purple-700 mb-2">Menu Preview</div>
+                        <NavPreview id={selectedNavType} active={true} />
+                      </div>
+                      <div className="rounded-xl border border-purple-200 bg-white p-2">
+                        <div className="text-xs font-semibold uppercase tracking-wide text-purple-700 mb-2">Footer Preview</div>
+                        <FooterPreview id={formData.footerStyle} active={true} />
+                      </div>
+                    </div>
                   </div>
                 </div>
 
@@ -1705,10 +1716,9 @@ export default function NewProjectPage() {
                     <div className="flex justify-between items-center">
                       <span className="text-amber-700">Primary Color:</span>
                       <div className="flex items-center space-x-2">
-                        <div 
-                          className="w-4 h-4 rounded-full border border-amber-300"
-                          style={{ backgroundColor: formData.primaryColor }}
-                        />
+                        <div className="px-2 py-0.5 rounded-md border border-amber-300 bg-white text-[11px] font-mono text-amber-900">
+                          HEX
+                        </div>
                         <span className="font-medium text-amber-900">{formData.primaryColor}</span>
                       </div>
                     </div>
@@ -1716,6 +1726,8 @@ export default function NewProjectPage() {
                 </div>
               </div>
             </div>
+
+            <SiteMapPreview pageNames={pageNamesArray} getReadableLayoutRows={getReadableLayoutRows} />
 
             <div className="flex flex-wrap justify-between items-center gap-4 pt-6 border-t">
               <Button

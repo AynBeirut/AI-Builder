@@ -46,3 +46,4 @@ next-env.d.ts
 *.tar.gz
 ecosystem.config.js
 dev.db*
+.credentials.md
