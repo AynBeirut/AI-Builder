@@ -1,0 +1,13 @@
+.credentials.md
+vps-credentials.md
+client_secret*.json
+.env
+.env.*
+!.env.example
+node_modules/
+.next/
+*.db
+*.db.backup-*
+*.sqlite
+*.sqlite3
+.DS_Store

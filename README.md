@@ -4,6 +4,23 @@
 
 **Project Status:** 🚧 Week 1 Complete ✅ | **Target Launch:** April 2026
 
+## Mac handoff - 2026-10-22
+
+- Problem: local work needed a safe Git handoff to another machine.
+- Approach: Anwar reported tests passed and authorized safe pushes. Preserve the
+  existing deletion of the legacy credential document; add root ignore rules for
+  credentials, OAuth downloads, local environment files and databases.
+- Outcome: application code is unchanged. GitHub synchronization is recorded in
+  the workspace handoff report after comparing remote commit hashes.
+- Limitation: the separate AI Builder checkout nested inside Grabio has local
+  application changes that were not merged here. Deleting the legacy credential
+  file does not erase it from older Git history; review rotation separately.
+- Continue: clone `AynBeirut/AI-Builder`, branch `master`, on the Mac; restore
+  secrets privately and follow [ai-builder/README.md](ai-builder/README.md).
+  Read [conversation.md](conversation.md) and [backlog.md](backlog.md) first.
+- Version note: the current application manifest uses Next.js 16 and React 19;
+  the older stack descriptions below are historical.
+
 ---
 
 ## 📋 Table of Contents
